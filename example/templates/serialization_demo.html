@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu Serialization Demo - Django Flex Menus</title>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .demo-section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .demo-section h2 {
+      margin-top: 0;
+      color: #333;
+    }
+    .demo-section h3 {
+      color: #555;
+      border-bottom: 2px solid #eee;
+      padding-bottom: 10px;
+    }
+    .menu-container {
+      margin: 15px 0;
+    }
+    .menu-item {
+      padding: 10px 15px;
+      margin: 5px 0;
+      background: #f8f9fa;
+      border-radius: 4px;
+      border-left: 4px solid #007bff;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .menu-item:hover {
+      background: #e9ecef;
+      transform: translateX(5px);
+    }
+    .menu-item.selected {
+      background: #007bff;
+      color: white;
+    }
+    .menu-item.nested {
+      margin-left: 20px;
+      border-left-color: #6c757d;
+    }
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      border-radius: 3px;
+      margin-left: 8px;
+    }
+    .badge-info { background: #17a2b8; color: white; }
+    .badge-success { background: #28a745; color: white; }
+    .badge-warning { background: #ffc107; color: #333; }
+    pre {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      font-size: 0.875rem;
+      border: 1px solid #dee2e6;
+    }
+    .code-block {
+      background: #282c34;
+      color: #abb2bf;
+      padding: 15px;
+      border-radius: 4px;
+      overflow-x: auto;
+      margin: 15px 0;
+    }
+    .code-block code {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 0.875rem;
+    }
+    .info-box {
+      background: #e7f3ff;
+      border-left: 4px solid #007bff;
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 4px;
+    }
+    .info-box strong {
+      color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Menu Serialization Demo</h1>
+  <p>This page demonstrates how to use the new serialization features of django-flex-menus with JavaScript frameworks like Alpine.js.</p>
+
+  <!-- Example 1: Basic Alpine.js Menu -->
+  <div class="demo-section">
+    <h2>Example 1: Basic Alpine.js Menu</h2>
+    <p>A simple menu rendered entirely with Alpine.js using serialized menu data.</p>
+    
+    {% load flex_menu %}
+    <div x-data='{% menu_json "main_navigation" %}' class="menu-container">
+      <template x-for="item in children" :key="item.name">
+        <div x-show="item.visible">
+          <a :href="item.url" 
+             class="menu-item"
+             :class="{ 'selected': item.selected }"
+             x-text="item.extra_context.label">
+          </a>
+        </div>
+      </template>
+    </div>
+
+    <h3>Template Code</h3>
+    <div class="code-block"><code>&lt;div x-data='{% verbatim %}{% menu_json "main_navigation" %}{% endverbatim %}' class="menu-container"&gt;
+  &lt;template x-for="item in children" :key="item.name"&gt;
+    &lt;div x-show="item.visible"&gt;
+      &lt;a :href="item.url" 
+         class="menu-item"
+         :class="{ 'selected': item.selected }"
+         x-text="item.extra_context.label"&gt;
+      &lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/template&gt;
+&lt;/div&gt;</code></div>
+  </div>
+
+  <!-- Example 2: Nested Menu with Icons -->
+  <div class="demo-section">
+    <h2>Example 2: Nested Menu with Icons and Metadata</h2>
+    <p>Demonstrating nested menu items with extra context data (icons, badges, etc.).</p>
+    
+    <div x-data='{% menu_json "main_navigation" %}' class="menu-container">
+      <template x-for="item in children" :key="item.name">
+        <div x-show="item.visible">
+          <!-- Parent Menu Item -->
+          <div class="menu-item" :class="{ 'selected': item.selected }">
+            <span x-show="item.extra_context.icon" 
+                  :class="item.extra_context.icon"
+                  style="margin-right: 8px;"></span>
+            <a :href="item.url || '#'" x-text="item.extra_context.label"></a>
+            <span x-show="item.has_visible_children" class="badge badge-info" 
+                  x-text="item.children.length + ' items'"></span>
+          </div>
+          
+          <!-- Nested Children -->
+          <template x-if="item.has_visible_children">
+            <div style="margin-left: 20px;">
+              <template x-for="child in item.children" :key="child.name">
+                <div x-show="child.visible">
+                  <a :href="child.url" 
+                     class="menu-item nested"
+                     :class="{ 'selected': child.selected }">
+                    <span x-show="child.extra_context.icon" 
+                          :class="child.extra_context.icon"
+                          style="margin-right: 8px;"></span>
+                    <span x-text="child.extra_context.label"></span>
+                  </a>
+                </div>
+              </template>
+            </div>
+          </template>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Example 3: Context-Aware Menu (Project Menu) -->
+  <div class="demo-section">
+    <h2>Example 3: Context-Aware Menu</h2>
+    <p>Menu that changes based on the project state (requires a project in context).</p>
+    
+    <div class="info-box">
+      <strong>Note:</strong> This example shows how menus adapt based on context variables.
+      The menu items visibility changes dynamically based on the project's status.
+      {% if project %}
+      Current project status: <span class="badge badge-success">{{ project.status }}</span>
+      {% else %}
+      <em>No project in context - menu items may be hidden.</em>
+      {% endif %}
+    </div>
+
+    {% if project %}
+    <div x-data='{% menu_json "project_actions" project=project slug=project.slug %}' class="menu-container">
+      <template x-for="item in children" :key="item.name">
+        <div x-show="item.visible">
+          <a :href="item.url" 
+             class="menu-item"
+             :class="{ 'selected': item.selected }">
+            <span x-show="item.extra_context.icon" 
+                  :class="item.extra_context.icon"
+                  style="margin-right: 8px;"></span>
+            <span x-text="item.extra_context.label"></span>
+            <span x-show="item.extra_context.description" 
+                  style="font-size: 0.8rem; color: #6c757d; margin-left: 8px;"
+                  x-text="'(' + item.extra_context.description + ')'"></span>
+          </a>
+        </div>
+      </template>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Example 4: Raw JSON Data -->
+  <div class="demo-section">
+    <h2>Example 4: Inspect the JSON Data</h2>
+    <p>This is the raw JSON structure that gets injected into your templates:</p>
+    
+    <h3>Main Navigation JSON (Pretty-Printed)</h3>
+    <pre>{% menu_json "main_navigation" indent=2 %}</pre>
+
+    {% if project %}
+    <h3>Project Actions JSON (Pretty-Printed)</h3>
+    <pre>{% menu_json "project_actions" project=project slug=project.slug indent=2 %}</pre>
+    {% endif %}
+  </div>
+
+  <!-- Example 5: Using in Python/Views -->
+  <div class="demo-section">
+    <h2>Example 5: Using Serialization in Python Code</h2>
+    <p>You can also serialize menus in your Python views for API responses:</p>
+    
+    <div class="code-block"><code>from flex_menu import root, serialize_menu
+
+def menu_api_view(request):
+    # Get and process the menu
+    menu = root.get('main_navigation')
+    processed = menu.process(request)
+    
+    # Serialize to JSON
+    json_data = serialize_menu(processed, indent=2)
+    
+    # Return as API response
+    return JsonResponse(json.loads(json_data), safe=False)
+    
+# Or use the dictionary directly
+def menu_data_view(request):
+    menu = root.get('main_navigation')
+    processed = menu.process(request)
+    
+    # Get dictionary representation
+    menu_dict = processed.to_dict()
+    
+    return JsonResponse(menu_dict)</code></div>
+  </div>
+
+  <!-- Use Cases -->
+  <div class="demo-section">
+    <h2>Use Cases for Menu Serialization</h2>
+    <ul>
+      <li><strong>Responsive Menus:</strong> Render different menu layouts for mobile vs desktop using the same data</li>
+      <li><strong>JavaScript Frameworks:</strong> Use with Vue.js, React, Alpine.js, or vanilla JavaScript</li>
+      <li><strong>API Endpoints:</strong> Expose menu structure via REST APIs for SPAs or mobile apps</li>
+      <li><strong>Client-Side Filtering:</strong> Let users search/filter menu items without page reloads</li>
+      <li><strong>Progressive Enhancement:</strong> Start with server-rendered HTML, enhance with JavaScript</li>
+      <li><strong>A/B Testing:</strong> Dynamically render different menu experiences</li>
+    </ul>
+  </div>
+
+  <!-- Available Properties -->
+  <div class="demo-section">
+    <h2>Available Menu Item Properties</h2>
+    <p>Each serialized menu item includes these properties:</p>
+    
+    <pre>{
+  "name": "item_name",              // Unique identifier
+  "url": "/path/to/page/" or null,  // Resolved URL
+  "visible": true,                  // Visibility after checks
+  "selected": false,                // True if URL matches current page
+  "depth": 0,                       // Depth in menu tree (0 = root)
+  "has_children": false,            // Has child menu items
+  "has_visible_children": false,    // Has visible child items after processing
+  "is_clickable": true,             // Has a URL (clickable link)
+  "extra_context": {                // Custom data from menu definition
+    "label": "Display Name",
+    "icon": "fas fa-home",
+    "custom_field": "any value"
+  },
+  "children": []                    // Array of child menu items
+}</pre>
+  </div>
+
+  <div class="info-box" style="margin-top: 30px;">
+    <strong>💡 Pro Tip:</strong> All serialization features maintain backward compatibility. 
+    You can continue using traditional server-side rendering alongside serialized menus 
+    in the same project!
+  </div>
+</body>
+</html>

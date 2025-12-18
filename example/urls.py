@@ -1,7 +1,7 @@
 from django.urls import path
 from django.views.generic import TemplateView
 
-from .views import ContextMenuDemoView
+from .views import ContextMenuDemoView, SerializationDemoView
 
 
 def view(title):
@@ -22,5 +22,11 @@ urlpatterns = [
         "demo/context-menus/<slug:slug>/",
         ContextMenuDemoView.as_view(),
         name="context_menu_demo",
+    ),
+    # Serialization demonstration
+    path(
+        "demo/serialization/",
+        SerializationDemoView.as_view(),
+        name="serialization_demo",
     ),
 ]
