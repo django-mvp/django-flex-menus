@@ -10,6 +10,7 @@ Note: Menu items cannot have both a URL and children - they must be either
 a link OR a container, not both.
 """
 
+import copy
 import logging
 from collections.abc import Callable
 from typing import Optional
@@ -605,7 +606,7 @@ class MenuItem(Node):
             "has_children": self.has_children,
             "has_visible_children": self.has_visible_children,
             "is_clickable": self.is_clickable,
-            "extra_context": self.extra_context.copy(),
+            "extra_context": copy.deepcopy(self.extra_context),
         }
 
         # Include children if requested

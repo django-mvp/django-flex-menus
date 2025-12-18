@@ -407,3 +407,23 @@ class TestSerializationEdgeCases:
         data = processed.to_dict()
         assert data["url"] is None
         assert data["is_clickable"] is False
+
+    def test_extra_context_deep_copy(self, get_request):
+        """Test that extra_context is deep copied to prevent mutations."""
+        nested_data = {"nested": {"value": "original"}}
+        item = MenuItem(
+            name="test",
+            url="/test/",
+            extra_context={"data": nested_data, "list": [1, 2, 3]},
+        )
+        processed = item.process(get_request)
+
+        data = processed.to_dict()
+
+        # Modify the serialized data
+        data["extra_context"]["data"]["nested"]["value"] = "modified"
+        data["extra_context"]["list"].append(4)
+
+        # Original should be unchanged
+        assert processed.extra_context["data"]["nested"]["value"] == "original"
+        assert processed.extra_context["list"] == [1, 2, 3]

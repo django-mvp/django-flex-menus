@@ -197,8 +197,22 @@ def menu_json(context, menu, include_children=True, indent=None, **kwargs):
     processed_menu = process_menu(context, menu, **kwargs)
 
     if not processed_menu:
-        # Return empty object if menu not found or not visible
-        return mark_safe("{}")
+        # Return consistent empty structure if menu not found or not visible
+        empty_structure = {
+            "name": None,
+            "url": None,
+            "visible": False,
+            "selected": False,
+            "depth": 0,
+            "has_children": False,
+            "has_visible_children": False,
+            "is_clickable": False,
+            "extra_context": {},
+            "children": [],
+        }
+        import json
+
+        return mark_safe(json.dumps(empty_structure, indent=indent))
 
     # Serialize to JSON
     json_str = serialize_menu(processed_menu, include_children=include_children, indent=indent)
