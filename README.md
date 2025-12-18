@@ -18,6 +18,7 @@ A flexible menu management system for Django built around [anytree](https://gith
 - Request-specific menu state isolation
 - Simple template system with single `template` attribute per component
 - **Child type validation** for theme-specific menu classes
+- **🆕 Menu serialization** for JavaScript frameworks (Alpine.js, Vue, React) and REST APIs
 
 ## Installation
 
@@ -49,6 +50,42 @@ main_menu.insert(child_menu, 2)
 # Insert child after another named child
 main_menu.insert_after(child_menu, "My Other Child")
 ```
+
+## Menu Serialization
+
+🆕 **New!** Serialize menus to JSON for use with JavaScript frameworks or REST APIs:
+
+```django
+{% load flex_menu %}
+
+<!-- Alpine.js Example -->
+<div x-data='{% menu_json "main_navigation" %}'>
+  <template x-for="item in children" :key="item.name">
+    <a :href="item.url" 
+       x-show="item.visible"
+       :class="{ 'active': item.selected }"
+       x-text="item.extra_context.label">
+    </a>
+  </template>
+</div>
+```
+
+```python
+# Python API Example
+from flex_menu import root, serialize_menu
+
+menu = root.get('main_nav').process(request)
+json_data = serialize_menu(menu, indent=2)
+```
+
+**Use cases:**
+- Responsive menus for mobile/desktop
+- Integration with Vue, React, Alpine.js, or vanilla JavaScript
+- REST API endpoints for SPAs or mobile apps
+- Client-side menu filtering and search
+- Progressive enhancement
+
+See [docs/serialization.md](docs/serialization.md) for complete documentation and examples.
 
 ## Configuration
 
