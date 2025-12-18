@@ -170,3 +170,39 @@ def warm_url_params_cache():
     except Exception as e:
         logger = logging.getLogger(__name__)
         logger.warning(f"Failed to warm URL params cache: {e}")
+
+
+def serialize_menu(menu_item, **options):
+    """
+    Serialize a processed menu item to JSON.
+
+    This utility function converts a processed menu item into a JSON string
+    that can be used with frontend frameworks like Alpine.js, Vue, React, etc.
+
+    Args:
+        menu_item: A processed MenuItem instance (i.e., after calling .process(request)).
+        **options: Additional options for serialization.
+            - include_children (bool): Whether to include children. Default is True.
+            - indent (int | None): JSON indentation for pretty printing. Default is None.
+
+    Returns:
+        JSON string representation of the menu.
+
+    Example:
+        >>> menu = root.get('main_nav').process(request)
+        >>> json_data = serialize_menu(menu, indent=2)
+        >>> # In template: <div x-data='{{ json_data|safe }}'>...</div>
+
+    Raises:
+        TypeError: If menu_item doesn't have a to_dict method.
+    """
+    import json
+
+    if not hasattr(menu_item, "to_dict"):
+        raise TypeError(f"menu_item must have a to_dict method. Got {type(menu_item)}")
+
+    include_children = options.get("include_children", True)
+    indent = options.get("indent", None)
+
+    data = menu_item.to_dict(include_children=include_children)
+    return json.dumps(data, indent=indent)

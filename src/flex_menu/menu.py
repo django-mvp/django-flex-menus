@@ -563,6 +563,59 @@ class MenuItem(Node):
         self.selected = url == self.request.path
         return self.selected
 
+    # ========== Serialization ==========
+
+    def to_dict(self, include_children: bool = True) -> dict:
+        """
+        Serialize the menu item to a dictionary.
+
+        This method converts a processed menu item into a JSON-serializable dictionary
+        that can be sent to frontend applications or injected into templates.
+
+        Args:
+            include_children: Whether to recursively include children. Default is True.
+
+        Returns:
+            Dictionary representation of the menu item with the following structure:
+            {
+                'name': str,
+                'url': str | None,
+                'visible': bool,
+                'selected': bool,
+                'depth': int,
+                'has_children': bool,
+                'has_visible_children': bool,
+                'is_clickable': bool,
+                'extra_context': dict,
+                'children': list[dict]  # Only if include_children=True
+            }
+
+        Example:
+            >>> menu = MenuItem('home', url='/').process(request)
+            >>> data = menu.to_dict()
+            >>> import json
+            >>> json_str = json.dumps(data)
+        """
+        data = {
+            "name": self.name,
+            "url": self.url if self.url else None,
+            "visible": self.visible,
+            "selected": self.selected,
+            "depth": self.depth,
+            "has_children": self.has_children,
+            "has_visible_children": self.has_visible_children,
+            "is_clickable": self.is_clickable,
+            "extra_context": self.extra_context.copy(),
+        }
+
+        # Include children if requested
+        if include_children and self.has_visible_children:
+            data["children"] = [child.to_dict(include_children=True) for child in self.visible_children]
+        elif include_children:
+            data["children"] = []
+
+        return data
+
 
 # Global root menu instance
 root = MenuItem("DjangoFlexMenu", parent=_NO_PARENT)
