@@ -4,6 +4,7 @@ from django.utils.safestring import mark_safe
 
 from flex_menu import root
 from flex_menu.renderers import get_renderer
+from flex_menu.utils import serialize_menu
 
 register = template.Library()
 
@@ -156,3 +157,64 @@ def render_item(context, item, renderer=None, **kwargs):
 
     # Render the item
     return renderer_instance.render(item, **kwargs)
+
+
+@register.simple_tag(takes_context=True)
+def menu_json(context, menu, include_children=True, indent=None, **kwargs):
+    """
+    Serialize a menu to JSON for use with JavaScript frameworks.
+
+    Processes the menu for the current request and returns JSON-serialized data
+    that can be injected into templates for use with Alpine.js, Vue, React, etc.
+
+    Args:
+        context: Template context (must contain 'request').
+        menu: Menu name (str) or MenuItem instance.
+        include_children: Whether to include children in serialization. Default is True.
+        indent: JSON indentation for pretty printing (int or None). Default is None.
+        **kwargs: Context variables passed to check functions and URL resolution.
+
+    Returns:
+        JSON string that is safe for use in templates.
+
+    Example:
+        {# Inject menu data for Alpine.js #}
+        <div x-data='{{ menu_json "main_nav" }}'>
+          <template x-for="item in children">
+            <a :href="item.url" x-text="item.extra_context.label"></a>
+          </template>
+        </div>
+
+        {# Pretty-printed JSON for debugging #}
+        <pre>{{ menu_json "main_nav" indent=2 }}</pre>
+
+        {# Pass context variables #}
+        <div x-data='{{ menu_json "project_menu" project=project }}'>
+          <!-- Menu items will be filtered based on project context -->
+        </div>
+    """
+    # Process menu (with caching)
+    processed_menu = process_menu(context, menu, **kwargs)
+
+    if not processed_menu:
+        # Return consistent empty structure if menu not found or not visible
+        empty_structure = {
+            "name": None,
+            "url": None,
+            "visible": False,
+            "selected": False,
+            "depth": 0,
+            "has_children": False,
+            "has_visible_children": False,
+            "is_clickable": False,
+            "extra_context": {},
+            "children": [],
+        }
+        import json
+
+        return mark_safe(json.dumps(empty_structure, indent=indent))
+
+    # Serialize to JSON
+    json_str = serialize_menu(processed_menu, include_children=include_children, indent=indent)
+
+    return mark_safe(json_str)

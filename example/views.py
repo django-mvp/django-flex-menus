@@ -53,3 +53,26 @@ class ContextMenuDemoView(TemplateView):
 
         # Redirect to same page to show updated menu
         return redirect("context_menu_demo", slug=slug)
+
+
+class SerializationDemoView(TemplateView):
+    """Demonstration page showing menu serialization features."""
+
+    template_name = "serialization_demo.html"
+
+    def get_context_data(self, **kwargs):
+        """Provide sample data for demonstration."""
+        context = super().get_context_data(**kwargs)
+
+        # Get or create a demo project for the context-aware menu example
+        demo_project, created = Project.objects.get_or_create(
+            slug="serialization-demo-project",
+            defaults={
+                "name": "Serialization Demo Project",
+                "status": "active",
+                "is_public": True,
+            },
+        )
+
+        context["project"] = demo_project
+        return context
