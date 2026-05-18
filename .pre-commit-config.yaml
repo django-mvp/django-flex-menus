@@ -32,9 +32,6 @@ repos:
       - id: poetry-check
       - id: poetry-lock
         stages: [manual]  # Only run manually, not in CI
-      - id: poetry-export
-        args: ["-o", "requirements.txt", "--with=dev", "--without-hashes"]
-        stages: [manual]  # Only run manually, not in CI
 
   # Local hooks
   - repo: local
@@ -56,5 +53,5 @@ repos:
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
   autoupdate_schedule: monthly
-  skip: [poetry-lock, poetry-export, mypy, deptry]  # Skip file-modifying hooks and slow hooks in CI
+  skip: [poetry-lock, mypy, deptry]  # Skip file-modifying hooks and slow hooks in CI
   submodules: false

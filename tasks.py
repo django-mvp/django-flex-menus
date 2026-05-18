@@ -31,7 +31,6 @@ def prerelease(c):
     This task performs all necessary steps to prepare the repository for release:
     1. Run linting, formatting, type checking, and dependency checks via pre-commit hooks
     2. Run quality checks and tests
-    3. Update requirements.txt
 
     Use this before running the release task to ensure everything is ready.
 
@@ -49,7 +48,7 @@ def prerelease(c):
     print("🚀 Running pre-commit hooks (includes mypy and deptry)")
     c.run("poetry run pre-commit run -a")
 
-    print("🚀 Running manual pre-commit hooks (poetry-lock, poetry-export)")
+    print("🚀 Running manual pre-commit hooks (poetry-lock)")
     c.run("poetry run pre-commit run --hook-stage manual -a")
 
     # Step 2: Check Poetry lock file consistency
@@ -61,11 +60,6 @@ def prerelease(c):
     print("\n🧪 Step 3: Running comprehensive test suite")
     print("🚀 Running pytest with coverage")
     c.run("poetry run pytest --cov --cov-config=pyproject.toml --cov-report=html --cov-report=term --tb=no -qq")
-
-    # Step 4: Update requirements.txt (final step)
-    print("\n📦 Step 4: Updating requirements.txt")
-    print("🚀 Exporting Poetry dependencies to requirements.txt")
-    c.run("poetry export -o requirements.txt --with=dev --without-hashes")
 
     print("\n" + "=" * 60)
     print("✅ Pre-release checks completed successfully!")
