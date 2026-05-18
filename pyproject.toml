@@ -17,7 +17,9 @@ Homepage = "https://github.com/SamuelJennings/django-flex-menus"
 packages = [{ include = "flex_menu", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
-fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools" }
+fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools", extras = [
+    "test",
+] }
 fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
     "sphinx_book_theme",
 ] }

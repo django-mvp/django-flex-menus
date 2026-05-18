@@ -4,23 +4,40 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'src/flex_menu/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.github/workflows/tests.yml'
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'src/flex_menu/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.github/workflows/tests.yml'
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
     runs-on: ubuntu-latest
     name: Test Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
+    timeout-minutes: 20
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
-        django-version: ['4.1', '4.2', '5.0', '5.1', '5.2']
+        python-version: ['3.12', '3.13']
+        django-version: ['5.0', '5.1', '5.2']
       fail-fast: false
 
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Poetry env
         uses: SamuelJennings/cached-poetry-action@v2.0
@@ -32,14 +49,14 @@ jobs:
 
       - name: Run tests
         run: |
-          if [ "${{ matrix.python-version }}" = "3.12" ] && [ "${{ matrix.django-version }}" = "5.2" ]; then
+          if [ "${{ matrix.python-version }}" = "3.13" ] && [ "${{ matrix.django-version }}" = "5.2" ]; then
             poetry run pytest --cov=flex_menu --cov-report=xml
           else
             poetry run pytest
           fi
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.12' && matrix.django-version == '5.2'
+        if: matrix.python-version == '3.13' && matrix.django-version == '5.2'
         uses: codecov/codecov-action@v5
         with:
           files: ./coverage.xml

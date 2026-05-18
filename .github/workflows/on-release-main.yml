@@ -1,55 +1,60 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - "v*"
-  release:
-    types: [published]
+  workflow_run:
+    workflows: ["Build"]
+    types: [completed]
+    branches: [main]
 
 jobs:
-  release-checks:
-    name: Pre-release checks
+  check-tag:
+    name: Check for release tag
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      tag: ${{ steps.get_tag.outputs.tag }}
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
 
-      - name: Set up Poetry env
-        uses: SamuelJennings/cached-poetry-action@v2.0
-
-      - name: Run tests
-        run: poetry run python manage.py test
-
-      - name: Build package
-        run: poetry build
-
-      - name: Check package
-        run: poetry check
+      - name: Detect version tag on triggering commit
+        id: get_tag
+        run: |
+          TAG=$(git tag --points-at HEAD | grep '^v' | head -n1)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          if [ -z "$TAG" ]; then
+            echo "No version tag on this commit — skipping release."
+          else
+            echo "Release tag detected: $TAG"
+          fi
 
   publish-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    needs: release-checks
+    needs: check-tag
+    timeout-minutes: 10
+    if: ${{ needs.check-tag.outputs.tag != '' }}
     permissions:
       # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
       contents: read
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Set up Poetry env
         uses: SamuelJennings/cached-poetry-action@v2.0
-
-      - name: Export tag
-        id: vars
-        run: echo "tag=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
+        with:
+          python-version: '3.12'
 
       - name: Build package
-        run: |
-          poetry version ${{ steps.vars.outputs.tag }}
-          poetry build
+        run: poetry build
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -57,28 +62,29 @@ jobs:
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: publish-pypi
+    needs: [check-tag, publish-pypi]
+    timeout-minutes: 10
+    if: ${{ needs.check-tag.outputs.tag != '' }}
     permissions:
       contents: write
     steps:
       - name: Check out
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Build Changelog
         id: github_release
-        uses: mikepenz/release-changelog-builder-action@v4
+        uses: mikepenz/release-changelog-builder-action@v6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref }}
+          tag_name: ${{ needs.check-tag.outputs.tag }}
+          name: Release ${{ needs.check-tag.outputs.tag }}
           body: ${{ steps.github_release.outputs.changelog }}
           draft: false
           prerelease: false
