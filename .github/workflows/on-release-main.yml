@@ -1,3 +1,7 @@
+# Triggered automatically after the Build workflow completes on main, or manually via workflow_dispatch.
+# Reads the version from pyproject.toml, verifies a matching git tag (e.g. v1.2.3) exists,
+# then publishes the package to PyPI and creates a GitHub Release with an auto-generated changelog.
+# If no matching tag is found, the release is skipped silently.
 name: Release
 
 on:
@@ -5,31 +9,34 @@ on:
     workflows: ["Build"]
     types: [completed]
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   check-tag:
     name: Check for release tag
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     outputs:
       tag: ${{ steps.get_tag.outputs.tag }}
     steps:
       - name: Check out
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
           fetch-depth: 0
 
       - name: Detect version tag on triggering commit
         id: get_tag
         run: |
-          TAG=$(git tag --points-at HEAD | grep '^v' | head -n1)
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          if [ -z "$TAG" ]; then
-            echo "No version tag on this commit — skipping release."
-          else
+          VERSION=$(python3 -c "import tomllib; data=tomllib.load(open('pyproject.toml','rb')); print(data['project']['version'])")
+          TAG="v${VERSION}"
+          if git tag -l "$TAG" | grep -q "$TAG"; then
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
             echo "Release tag detected: $TAG"
+          else
+            echo "tag=" >> $GITHUB_OUTPUT
+            echo "No git tag found for $TAG — skipping release."
           fi
 
   publish-pypi:
@@ -46,7 +53,7 @@ jobs:
       - name: Check out
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Poetry env
         uses: SamuelJennings/cached-poetry-action@v2.0
