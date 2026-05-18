@@ -1,59 +1,25 @@
-# Triggered automatically after the Build workflow completes on main, or manually via workflow_dispatch.
-# Reads the version from pyproject.toml, verifies a matching git tag (e.g. v1.2.3) exists,
-# then publishes the package to PyPI and creates a GitHub Release with an auto-generated changelog.
-# If no matching tag is found, the release is skipped silently.
+﻿# Triggered by pushing a version tag (e.g. v1.2.3) via `invoke release --rule=patch`.
+# Publishes the package to PyPI and creates a GitHub Release with an auto-generated changelog.
+# skip-existing: true makes retries safe -- PyPI silently ignores already-published versions,
+# so deleting and re-pushing a tag after a failed run will not cause a double-publish error.
 name: Release
 
 on:
-  workflow_run:
-    workflows: ["Build"]
-    types: [completed]
-    branches: [main]
-  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
 
 jobs:
-  check-tag:
-    name: Check for release tag
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    outputs:
-      tag: ${{ steps.get_tag.outputs.tag }}
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-          fetch-depth: 0
-
-      - name: Detect version tag on triggering commit
-        id: get_tag
-        run: |
-          VERSION=$(python3 -c "import tomllib; data=tomllib.load(open('pyproject.toml','rb')); print(data['project']['version'])")
-          TAG="v${VERSION}"
-          if git tag -l "$TAG" | grep -q "$TAG"; then
-            echo "tag=$TAG" >> $GITHUB_OUTPUT
-            echo "Release tag detected: $TAG"
-          else
-            echo "tag=" >> $GITHUB_OUTPUT
-            echo "No git tag found for $TAG — skipping release."
-          fi
-
   publish-pypi:
     name: Publish to PyPI
     runs-on: ubuntu-latest
-    needs: check-tag
     timeout-minutes: 10
-    if: ${{ needs.check-tag.outputs.tag != '' }}
     permissions:
-      # IMPORTANT: this permission is mandatory for trusted publishing
       id-token: write
       contents: read
     steps:
       - name: Check out
         uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
       - name: Set up Poetry env
         uses: SamuelJennings/cached-poetry-action@v2.0
@@ -65,20 +31,20 @@ jobs:
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
 
   create-release:
     name: Create GitHub Release
     runs-on: ubuntu-latest
-    needs: [check-tag, publish-pypi]
+    needs: publish-pypi
     timeout-minutes: 10
-    if: ${{ needs.check-tag.outputs.tag != '' }}
     permissions:
       contents: write
     steps:
       - name: Check out
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
 
       - name: Build Changelog
@@ -90,51 +56,6 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ needs.check-tag.outputs.tag }}
-          name: Release ${{ needs.check-tag.outputs.tag }}
+          tag_name: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           body: ${{ steps.github_release.outputs.changelog }}
-          draft: false
-          prerelease: false
-
-  # docker:
-  #   needs: publish
-  #   name: Build container
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: "☁️ checkout repository"
-  #       uses: actions/checkout@v2
-
-  #     - name: "🔧 setup buildx"
-  #       uses: docker/setup-buildx-action@v1
-
-  #     - name: "🔧 cache docker layers"
-  #       uses: actions/cache@v2
-  #       with:
-  #         path: /tmp/.buildx-cache
-  #         key: ${{ runner.os }}-buildx-${{ github.sha }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-buildx-
-
-  #     - name: "🔧 docker meta"
-  #       id: meta
-  #       uses: docker/metadata-action@v3
-  #       with:
-  #         images: ${{ github.repository }}
-  #         tags: latest
-
-  #     - name: "📦 docker build"
-  #       uses: docker/build-push-action@v2
-  #       with:
-  #         context: .
-  #         tags: ${{ steps.meta.outputs.tags }}
-  #         labels: ${{ steps.meta.outputs.labels }}
-  #         outputs: type=docker,dest=/tmp/docker.tar
-  #         push: false
-  #         cache-from: type=gha, scope=${{ github.workflow }}
-  #         cache-to: type=gha, scope=${{ github.workflow }}
-
-  #     - name: "📂 docker artifacts"
-  #       uses: actions/upload-artifact@v2
-  #       with:
-  #         name: docker
-  #         path: /tmp/docker.tar
