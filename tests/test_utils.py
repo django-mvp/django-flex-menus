@@ -1,11 +1,11 @@
-"""
+﻿"""
 Tests for flex_menu.utils module.
 """
 
 import pytest
 from django.urls.exceptions import NoReverseMatch
 
-from flex_menu.utils import get_required_url_params, warm_url_params_cache
+from flex_menu.utils import get_required_url_params
 
 
 @pytest.mark.django_db
@@ -84,62 +84,33 @@ class TestGetRequiredUrlParams:
             settings.ROOT_URLCONF = original_urlconf
             clear_url_caches()
 
+    def test_url_conf_switch_returns_correct_params(self, settings):
+        """Switching ROOT_URLCONF returns params for the new conf, not the old one.
 
-class TestCacheWarming:
-    """Test the warm_url_params_cache function."""
+        Since get_required_url_params is no longer cached, this is trivially
+        correct; the test documents the expected behaviour.
+        """
+        from django.urls import clear_url_caches, include, path
+        from django.views import View
 
-    def test_warm_url_params_cache_populates_cache(self):
-        """Test that warm_url_params_cache pre-populates the LRU cache."""
-        # Clear the cache first
-        get_required_url_params.cache_clear()
+        class DummyView(View):
+            pass
 
-        # Verify cache is empty
-        cache_info = get_required_url_params.cache_info()
-        assert cache_info.currsize == 0
-        assert cache_info.hits == 0
-        assert cache_info.misses == 0
+        original_urlconf = settings.ROOT_URLCONF
+        settings.ROOT_URLCONF = __name__
+        import sys
 
-        # Warm the cache
-        warm_url_params_cache()
+        sys.modules[__name__].urlpatterns = [
+            path(
+                "alt/<str:slug>/",
+                include(([path("", DummyView.as_view(), name="detail")], "alt")),
+            ),
+        ]
+        clear_url_caches()
 
-        # Verify cache is populated
-        cache_info = get_required_url_params.cache_info()
-        assert cache_info.currsize > 0, "Cache should contain URLs after warming"
-        assert cache_info.misses > 0, "Cache misses should occur during warming"
-
-    def test_warmed_cache_provides_fast_lookups(self):
-        """Test that URLs cached during warming result in cache hits."""
-        # Clear and warm the cache
-        get_required_url_params.cache_clear()
-        warm_url_params_cache()
-
-        # Get initial stats
-        initial_info = get_required_url_params.cache_info()
-        initial_hits = initial_info.hits
-
-        # Look up a common URL that should be cached
         try:
-            get_required_url_params("admin:index")
-
-            # Verify it was a cache hit
-            final_info = get_required_url_params.cache_info()
-            assert final_info.hits > initial_hits, "Lookup should be a cache hit"
-        except Exception:
-            # If admin:index doesn't exist, that's fine - skip this test
-            pytest.skip("admin:index not available")
-
-    def test_cache_warming_handles_errors_gracefully(self):
-        """Test that cache warming doesn't crash on URL resolver issues."""
-        # This should not raise any exceptions
-        get_required_url_params.cache_clear()
-        warm_url_params_cache()
-
-        # Cache should still have some entries even if some URLs failed
-        cache_info = get_required_url_params.cache_info()
-        # At minimum, Django admin URLs should be cached
-        assert cache_info.currsize >= 0
-
-    def test_cache_with_unlimited_size(self):
-        """Test that cache has unlimited size (maxsize=None)."""
-        cache_info = get_required_url_params.cache_info()
-        assert cache_info.maxsize is None, "Cache should have unlimited size"
+            params = get_required_url_params("alt:detail")
+            assert params == {"slug"}
+        finally:
+            settings.ROOT_URLCONF = original_urlconf
+            clear_url_caches()
