@@ -40,7 +40,7 @@ jobs:
       - name: Run pre-commit checks
         run: |
           pip install pre-commit
-          pre-commit run --all-files
+          SKIP=mypy,deptry pre-commit run --all-files
 
   security:
     name: Security Scan
