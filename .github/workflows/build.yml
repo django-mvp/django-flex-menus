@@ -38,7 +38,9 @@ jobs:
         run: poetry check --lock
 
       - name: Run pre-commit checks
-        run: poetry run pre-commit run --all-files
+        run: |
+          pip install pre-commit
+          pre-commit run --all-files
 
   security:
     name: Security Scan
