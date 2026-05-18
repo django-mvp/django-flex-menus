@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'src/flex_menu/**'
+      - 'flex_menu/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'poetry.lock'
@@ -13,7 +13,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - 'src/flex_menu/**'
+      - 'flex_menu/**'
       - 'tests/**'
       - 'pyproject.toml'
       - 'poetry.lock'

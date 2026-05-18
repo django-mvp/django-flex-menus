@@ -14,7 +14,7 @@ dependencies = ["django>=4.2,<5.3", "anytree>2"]
 Homepage = "https://github.com/SamuelJennings/django-flex-menus"
 
 [tool.poetry]
-packages = [{ include = "flex_menu", from = "src" }]
+packages = [{ include = "flex_menu" }]
 
 [tool.poetry.group.dev.dependencies]
 fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools", extras = [
@@ -83,7 +83,7 @@ preview = true
 profile = "black"
 
 [tool.mypy]
-files = ["src/flex_menu"]
+files = ["flex_menu"]
 disallow_untyped_defs = "False"
 disallow_any_unimported = "False"
 ignore_missing_imports = "True"
@@ -93,7 +93,7 @@ warn_return_any = "True"
 warn_unused_ignores = "True"
 show_error_codes = "True"
 exclude = ["docs/", "migrations/", "tests/settings.py"]
-mypy_path = "src/flex_menu/"
+mypy_path = "flex_menu/"
 plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]

@@ -57,7 +57,7 @@ jobs:
       - name: Run bandit security linter
         run: |
           pip install bandit[toml]
-          bandit -r src/flex_menu/ -f json -o bandit-report.json || true
+          bandit -r flex_menu/ -f json -o bandit-report.json || true
 
       - name: Upload bandit report
         uses: actions/upload-artifact@v5

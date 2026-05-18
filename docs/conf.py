@@ -1,16 +1,13 @@
-import os
 import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
+sys.path.insert(0, str(BASE_DIR))
 
-sys.path.insert(0, str(BASE_DIR / "src"))
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "tests.settings")
+from fairdm_docs.conf import *
 
-from docs.conf import *
-
-autodoc2_packages = ["flex_menu"]
+autodoc2_packages = ["../flex_menu"]
 autodoc2_render_plugin = "myst"  # or "rst"
 autodoc2_output_dir = "api"
 html_logo = None
