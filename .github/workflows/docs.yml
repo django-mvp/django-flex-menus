@@ -16,10 +16,10 @@ jobs:
       - name: Set up Poetry env
         uses: SamuelJennings/cached-poetry-action@v2.0
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Build documentation
-        run: poetry run invoke docs
+        run: poetry run sphinx-build -E -b html docs docs/_build
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
