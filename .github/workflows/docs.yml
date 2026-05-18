@@ -13,18 +13,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Poetry env
+        uses: SamuelJennings/cached-poetry-action@v2.0
         with:
           python-version: '3.11'
-
-      - name: Install Poetry
-        uses: abatilo/actions-poetry@v3
-        with:
-          poetry-version: '1.8.2'
-
-      - name: Install dependencies
-        run: poetry install --no-interaction --no-root
 
       - name: Build documentation
         run: poetry run invoke docs

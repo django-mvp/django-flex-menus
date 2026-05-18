@@ -2,7 +2,6 @@ exclude: "^docs/|/migrations/|^tests/"
 default_stages: [pre-commit]
 
 repos:
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:
@@ -27,11 +26,11 @@ repos:
       - id: black
 
   - repo: https://github.com/python-poetry/poetry
-    rev: '1.8.5'
+    rev: "2.3.4"
     hooks:
       - id: poetry-check
       - id: poetry-lock
-        stages: [manual]  # Only run manually, not in CI
+        stages: [manual] # Only run manually, not in CI
 
   # Local hooks
   - repo: local
@@ -53,5 +52,5 @@ repos:
 # sets up .pre-commit-ci.yaml to ensure pre-commit dependencies stay up to date
 ci:
   autoupdate_schedule: monthly
-  skip: [poetry-lock, mypy, deptry]  # Skip file-modifying hooks and slow hooks in CI
+  skip: [poetry-lock, mypy, deptry] # Skip file-modifying hooks and slow hooks in CI
   submodules: false

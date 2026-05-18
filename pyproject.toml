@@ -1,23 +1,26 @@
-[tool.poetry]
+[project]
 name = "django-flex-menus"
 version = "0.4.1"
 description = "Flexible site menus for Django"
-authors = ["Samuel Jennings <samuel.scott.jennings@gmail.com>"]
+authors = [
+    { name = "Samuel Jennings", email = "samuel.scott.jennings@gmail.com" },
+]
 license = "MIT"
 readme = "README.md"
-packages = [
-    {include = "flex_menu", from = "src"}
-    ]
-homepage = "https://github.com/SamuelJennings/django-flex-menus"
+requires-python = ">=3.11,<4.0"
+dependencies = ["django>=4.2,<5.3", "anytree>2"]
 
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-django = ">=4.2,<5.3"
-anytree = ">2"
+[project.urls]
+Homepage = "https://github.com/SamuelJennings/django-flex-menus"
+
+[tool.poetry]
+packages = [{ include = "flex_menu", from = "src" }]
 
 [tool.poetry.group.dev.dependencies]
-fairdm-dev-tools = {git = "https://github.com/FAIR-DM/dev-tools"}
-fairdm-docs = {git = "https://github.com/FAIR-DM/fairdm-docs", extras = ["sphinx_book_theme"]}
+fairdm-dev-tools = { git = "https://github.com/FAIR-DM/dev-tools" }
+fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
+    "sphinx_book_theme",
+] }
 
 [build-system]
 requires = ["poetry-core"]
@@ -39,12 +42,12 @@ markers = [
     "performance: marks tests as performance tests (deselect with '-m \"not performance\"')",
     "integration: marks tests as integration tests",
     "slow: marks tests as slow running (deselect with '-m \"not slow\"')",
-    "django_db: mark test to use django database"
+    "django_db: mark test to use django database",
 ]
 filterwarnings = [
     "ignore",
     "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning"
+    "ignore::PendingDeprecationWarning",
 ]
 
 [tool.coverage.report]
@@ -87,7 +90,7 @@ check_untyped_defs = "False"
 warn_return_any = "True"
 warn_unused_ignores = "True"
 show_error_codes = "True"
-exclude = ["docs/","migrations/","tests/settings.py"]
+exclude = ["docs/", "migrations/", "tests/settings.py"]
 mypy_path = "src/flex_menu/"
 plugins = ["mypy_django_plugin.main"]
 
@@ -96,12 +99,7 @@ django_settings_module = "tests.settings"
 ignore_missing_model_attributes = "True"
 
 [tool.deptry]
-extend_exclude = [
-    "tasks.py",
-    "tests/",
-    "example/",
-    "docs/"
-]
+extend_exclude = ["tasks.py", "tests/", "example/", "docs/"]
 
 [tool.deptry.per_rule_ignores]
 DEP003 = ["flex_menu"]
