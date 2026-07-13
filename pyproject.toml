@@ -1,6 +1,6 @@
 [project]
 name = "django-flex-menus"
-version = "0.4.2"
+version = "0.4.3"
 description = "Flexible site menus for Django"
 authors = [
     { name = "Samuel Jennings", email = "samuel.scott.jennings@gmail.com" },
