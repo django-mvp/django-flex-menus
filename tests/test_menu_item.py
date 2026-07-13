@@ -249,6 +249,61 @@ class TestMenuItemProcessing:
 
         assert processed.selected is True
 
+    def test_process_parent_selected_when_child_selected(self):
+        """Parent is marked selected when a child's URL matches the request."""
+        item = MenuItem(
+            name="parent",
+            children=[
+                MenuItem(name="child", url="/about/"),
+            ],
+        )
+        rf = RequestFactory()
+        request = rf.get("/about/")
+
+        processed = item.process(request)
+
+        assert processed.visible_children[0].selected is True
+        assert processed.selected is True
+
+    def test_process_parent_selected_when_grandchild_selected(self):
+        """Selection propagates through multiple ancestor levels."""
+        item = MenuItem(
+            name="grandparent",
+            children=[
+                MenuItem(
+                    name="parent",
+                    children=[
+                        MenuItem(name="child", url="/about/"),
+                    ],
+                ),
+            ],
+        )
+        rf = RequestFactory()
+        request = rf.get("/about/")
+
+        processed = item.process(request)
+        processed_parent = processed.visible_children[0]
+
+        assert processed_parent.visible_children[0].selected is True
+        assert processed_parent.selected is True
+        assert processed.selected is True
+
+    def test_process_parent_not_selected_when_no_child_selected(self):
+        """Parent stays unselected when no child matches the request."""
+        item = MenuItem(
+            name="parent",
+            children=[
+                MenuItem(name="child", url="/about/"),
+            ],
+        )
+        rf = RequestFactory()
+        request = rf.get("/contact/")
+
+        processed = item.process(request)
+
+        assert processed.visible_children[0].selected is False
+        assert processed.selected is False
+
 
 class TestMenuItemManipulation:
     """Test MenuItem tree manipulation methods."""

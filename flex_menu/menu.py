@@ -414,6 +414,11 @@ class MenuItem(Node):
             # Store processed children
             processed._processed_children = processed_children
 
+            # If any child is selected, this item is also selected so that
+            # ancestor chains of a selected item stay open/highlighted.
+            if any(child.selected for child in processed_children):
+                processed.selected = True
+
             # If this is a container (no URL) with no visible children, hide it
             if not processed.has_url and not processed_children:
                 processed.visible = False
