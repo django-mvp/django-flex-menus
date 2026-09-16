@@ -166,14 +166,6 @@ def complex_menu_tree():
     )
 
 
-@pytest.fixture(autouse=True)
-def enable_db_access_for_all_tests(db):
-    """
-    Grants database access to all tests.
-    """
-    pass
-
-
 @pytest.fixture
 def settings_with_debug():
     """Provides settings with DEBUG=True for testing URL failure logging."""
