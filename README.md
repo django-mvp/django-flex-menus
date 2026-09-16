@@ -1,109 +1,159 @@
-# Django Flex Menu
+# django-flex-menus
 
-[![Github Build](https://github.com/SamuelJennings/django-flex-menus/actions/workflows/build.yml/badge.svg)](https://github.com/SamuelJennings/django-flex-menus/actions/workflows/build.yml)
-[![Github Tests](https://github.com/SamuelJennings/django-flex-menus/actions/workflows/tests.yml/badge.svg)](https://github.com/SamuelJennings/django-flex-menus/actions/workflows/tests.yml)
-[![codecov](https://codecov.io/gh/SamuelJennings/django-flex-menus/branch/main/graph/badge.svg)](https://codecov.io/gh/SamuelJennings/django-flex-menus)
-![GitHub](https://img.shields.io/github/license/SamuelJennings/django-flex-menus)
-![GitHub last commit](https://img.shields.io/github/last-commit/SamuelJennings/django-flex-menus)
+[![Tests](https://github.com/django-mvp/django-flex-menus/actions/workflows/tests.yml/badge.svg)](https://github.com/django-mvp/django-flex-menus/actions/workflows/tests.yml)
+[![Build](https://github.com/django-mvp/django-flex-menus/actions/workflows/build.yml/badge.svg)](https://github.com/django-mvp/django-flex-menus/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/django-mvp/django-flex-menus/branch/main/graph/badge.svg)](https://codecov.io/gh/django-mvp/django-flex-menus)
+[![PyPI](https://img.shields.io/pypi/v/django-flex-menus)](https://pypi.org/project/django-flex-menus/)
+[![Python](https://img.shields.io/pypi/pyversions/django-flex-menus)](https://pypi.org/project/django-flex-menus/)
+[![License](https://img.shields.io/github/license/django-mvp/django-flex-menus)](https://github.com/django-mvp/django-flex-menus/blob/main/LICENSE)
 
-A flexible menu management system for Django built around [anytree](https://github.com/c0fec0de/anytree).
+Flexible site menus for Django.
 
+Site navigation usually ends up spread between templates, context processors and a pile of
+`{% if perms %}` blocks, which makes it hard to see what the menu actually contains and harder
+still to render the same menu twice in two different shapes. django-flex-menus moves the
+structure into Python: you declare a named tree once, attach a visibility rule to any part of
+it, and templates ask for it by name and choose how it is drawn.
 
-## Features
+## Scope & philosophy
 
-- Modular, tree-based design for easy customization and extension
-- Flexible URL resolution
-- Object-based processing for detail view menus
-- **Thread-safe processing** for concurrent requests
-- Request-specific menu state isolation
-- Simple template system with single `template` attribute per component
-- **Child type validation** for theme-specific menu classes
+**What it is.** A tree of menu items, declared in Python and rendered through a renderer you
+choose at the point of use. The tree carries structure, destinations and visibility rules. The
+renderer carries the markup.
+
+**What it deliberately is not.**
+
+- **Not a theme, and not a set of templates.** No markup ships as the supported surface. The
+  `example/` project contains Bootstrap 5 templates to demonstrate the renderer API, not to be
+  imported from your project.
+- **Not a permissions system.** A visibility rule is any predicate — a permission check, a
+  subscription tier, a feature flag, the time of day. The library never decides what makes an
+  item visible, only when to ask.
+- **Not a database model.** Menus are code, defined at startup and versioned with your project.
+  There is no editing interface and no migration.
+- **Not a URL router.** Destinations resolve through Django's own resolver.
+
+**When those pull against each other,** the structure wins over the markup. Anything that would
+require the library to know what your HTML looks like belongs in a renderer instead.
+
+## Requirements
+
+- Python 3.12+
+- Django 5.2 or 6.0
 
 ## Installation
 
+```bash
+pip install django-flex-menus
+```
 
-## API
-
-Once you have a menu instance, you can modify it in the following ways:
+Add the app to `INSTALLED_APPS`:
 
 ```python
-
-main_menu = Menu("Site Menu")
-child_menu = MenuLink("My Child", url="/my-child")
-
-# Append a child
-main_menu.append(child_menu)
-
-# Get a child instance by name
-child_menu = main_menu.get("My Child")
-
-# Pop a child (note this is done via the child menu, not the parent menu)
-child = child_menu.pop()
-
-# Extend a menu with a list of menu items
-main_menu.extend([child_menu, child_menu2, child_menu3])
-
-# Insert child/children at a specific position
-main_menu.insert(child_menu, 2)
-
-# Insert child after another named child
-main_menu.insert_after(child_menu, "My Other Child")
+INSTALLED_APPS = [
+    # ...
+    "flex_menu",
+]
 ```
+
+There are no models, so no migration is needed.
+
+## Quick start
+
+Declare a menu in `myapp/menus.py`. Naming a `Menu` attaches it to the global tree, which is
+what makes it reachable by name from a template:
+
+```python
+from flex_menu import Menu, MenuItem
+
+main_nav = Menu(
+    "main_nav",
+    children=[
+        MenuItem(name="home", view_name="home"),
+        MenuItem(name="dashboard", view_name="dashboard"),
+    ],
+)
+```
+
+Point a renderer at your markup in `settings.py`:
+
+```python
+FLEX_MENUS = {
+    "renderers": {
+        "navbar": "myapp.renderers.NavbarRenderer",
+        "sidebar": "myapp.renderers.SidebarRenderer",
+    },
+}
+```
+
+Then render it, as many times and in as many shapes as you need:
+
+```django
+{% load flex_menu %}
+
+<nav>{% render_menu 'main_nav' renderer='navbar' %}</nav>
+<aside>{% render_menu 'main_nav' renderer='sidebar' %}</aside>
+```
+
+## Controlling visibility
+
+Every item takes a `check`: a boolean, or a callable receiving the request and any keyword
+arguments passed to `{% render_menu %}`. An item whose check returns false is dropped, as is an
+item whose URL cannot be resolved.
+
+```python
+MenuItem(
+    name="billing",
+    view_name="billing",
+    check=lambda request, **kwargs: request.user.is_authenticated,
+)
+```
+
+## Working with a menu
+
+```python
+main_nav.append(MenuItem(name="reports", view_name="reports"))
+main_nav.extend([item_one, item_two])
+main_nav.insert(item, 2)
+main_nav.insert_after(item, "home")
+
+reports = main_nav.get("reports")
+reports.pop()
+```
+
+Run `python manage.py render_menu` to print the whole tree, or `--name <menu>` for one of them.
 
 ## Configuration
 
-### Logging URL Resolution Failures
-
-By default, URL resolution failures are only logged when `DEBUG=True`. To control this behavior:
+Everything lives under a single `FLEX_MENUS` dict:
 
 ```python
-# In your Django settings
-FLEX_MENU_LOG_URL_FAILURES = False  # Disable logging (recommended for production)
-FLEX_MENU_LOG_URL_FAILURES = True   # Always log failures
-# Default: settings.DEBUG
+FLEX_MENUS = {
+    "renderers": {
+        "navbar": "myapp.renderers.NavbarRenderer",
+    },
+    # Used when {% render_menu %} is given no renderer
+    "default_renderer": "navbar",
+    # Whether unresolvable destinations are logged. Defaults to DEBUG.
+    "log_url_failures": False,
+}
 ```
 
-See [CONFIGURATION.md](CONFIGURATION.md) for detailed configuration options.
+## Thread safety
 
-## Performance Considerations
+Menus are declared once at startup and shared across the process, so processing never mutates
+the declared tree — each request works against its own copy. That copy is real work on every
+render, so keep visibility checks cheap: they run for every item, on every request.
 
-For optimal performance in production:
+## Documentation
 
-- **Avoid `menu.copy()`** during request processing - it's expensive
-- **Cache permission checks** when possible - use `@lru_cache` or Django's cache framework
-- **Pre-resolve static URLs** during app startup for menus that don't change
-- **Use lazy evaluation** - check parent visibility before processing children
-- **Consider menu depth** - deep hierarchies can impact performance
+Full documentation, including the renderer API and how to write your own, is at
+<https://django-mvp.github.io/django-flex-menus/>.
 
-See [PERFORMANCE.md](PERFORMANCE.md) for detailed optimization strategies.
+## Changelog
 
-## Thread Safety
+See [CHANGELOG.md](https://github.com/django-mvp/django-flex-menus/blob/main/CHANGELOG.md).
 
-⚠️ **Important**: The menu processing is now **thread-safe** for concurrent requests. Each request gets its own processed copy to prevent race conditions.
+## License
 
-See [THREAD_SAFETY.md](THREAD_SAFETY.md) for detailed information about concurrency handling.
-
-## Theme-Specific Menu Classes
-
-Create type-safe theme-specific menu classes:
-
-```python
-class Bootstrap5DropdownMenu(Menu):
-    template = "bootstrap5/dropdown-menu.html"
-    allowed_children = ['Bootstrap5DropdownMenuLink']
-
-class Bootstrap5DropdownMenuLink(MenuLink):
-    template = "bootstrap5/dropdown-item.html"
-
-# Type validation prevents mixing incompatible components
-dropdown = Bootstrap5DropdownMenu("User Menu")
-dropdown.append(Bootstrap5DropdownMenuLink("Profile", view_name="profile"))  # ✅ OK
-dropdown.append(MenuLink("Settings", view_name="settings"))  # ❌ TypeError!
-```
-
-See [THEME_CLASSES.md](THEME_CLASSES.md) for detailed examples and patterns.
-
-
-## See also
-
-[django-account-management](https://github.com/SamuelJennings/django-account-management)
+MIT — see [LICENSE](https://github.com/django-mvp/django-flex-menus/blob/main/LICENSE).
