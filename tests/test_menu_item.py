@@ -417,7 +417,7 @@ class TestMenuItemAdvanced:
         assert removed is child1
         assert removed.parent is None
         assert len(list(parent.children)) == 1
-        assert list(parent.children)[0].name == "child2"
+        assert next(iter(parent.children)).name == "child2"
 
     def test_pop_nonexistent_raises(self):
         """Test popping nonexistent child raises error."""

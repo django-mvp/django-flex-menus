@@ -12,7 +12,12 @@
 # replacement, and ruff's UP rules cover pyupgrade (enable them in the repo's
 # `[tool.ruff.lint]` select list).
 
-exclude: "^docs/|/migrations/|^tests/"
+# LOCAL DIVERGENCE from templates/pre-commit-config.yaml: the family template
+# also excludes `^tests/`. This repo lints and formats its tests, so that leg is
+# dropped here — keep it dropped when re-copying the template on a standards
+# bump. The tests/* carve-outs in pyproject.toml's [tool.ruff.lint.per-file-ignores]
+# only do anything while tests/ is actually inspected.
+exclude: "^docs/|/migrations/"
 default_stages: [pre-commit]
 
 repos:

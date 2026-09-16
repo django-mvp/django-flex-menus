@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tests for flex_menu.utils module.
 """
 
