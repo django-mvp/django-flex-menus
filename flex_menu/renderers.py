@@ -234,7 +234,9 @@ def get_renderer(name: str | None = None) -> BaseRenderer:
     try:
         renderer_class = import_string(renderer_path)
     except ImportError as e:
-        raise ImportError(f"Cannot import renderer '{name}' from '{renderer_path}': {e}") from e
+        raise ImportError(
+            f"Cannot import renderer '{name}' from '{renderer_path}': {e}"
+        ) from e
 
     # Validate renderer has required methods
     if not hasattr(renderer_class, "render"):

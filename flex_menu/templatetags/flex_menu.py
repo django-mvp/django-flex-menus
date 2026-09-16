@@ -98,7 +98,9 @@ def render_menu(context, menu, renderer=None, include_media=True, **kwargs):
         )
 
     # Get renderer instance, or use what was passed if it is already one
-    renderer_instance = get_renderer(renderer) if isinstance(renderer, str) else renderer
+    renderer_instance = (
+        get_renderer(renderer) if isinstance(renderer, str) else renderer
+    )
 
     # Render menu content
     menu_html = renderer_instance.render(processed_menu, **kwargs)

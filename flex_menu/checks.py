@@ -168,7 +168,9 @@ def user_in_all_groups(*groups):
     """
 
     def _function(request, **kwargs):
-        if not (hasattr(request, "user") and request.user and request.user.is_authenticated):
+        if not (
+            hasattr(request, "user") and request.user and request.user.is_authenticated
+        ):
             return False
 
         user_groups = request.user.groups.values_list("name", flat=True)
@@ -194,7 +196,9 @@ def user_has_all_permissions(*perms: str):
     """
 
     def _check(request, **kwargs):
-        if not (hasattr(request, "user") and request.user and request.user.is_authenticated):
+        if not (
+            hasattr(request, "user") and request.user and request.user.is_authenticated
+        ):
             return False
 
         return all(request.user.has_perm(perm) for perm in perms)
@@ -229,7 +233,9 @@ def user_email_verified(request, **kwargs):
     Returns:
         bool: True if the user's email is verified, False otherwise.
     """
-    if not (hasattr(request, "user") and request.user and request.user.is_authenticated):
+    if not (
+        hasattr(request, "user") and request.user and request.user.is_authenticated
+    ):
         return False
 
     # Check if the user model has email_verified field
@@ -251,7 +257,9 @@ def user_has_profile(request, **kwargs):
     Returns:
         bool: True if the user has a profile, False otherwise.
     """
-    if not (hasattr(request, "user") and request.user and request.user.is_authenticated):
+    if not (
+        hasattr(request, "user") and request.user and request.user.is_authenticated
+    ):
         return False
 
     # Check common profile relationship names
@@ -338,7 +346,9 @@ def user_attribute_equals(attribute_name: str, expected_value):
     """
 
     def _check(request, **kwargs):
-        if not (hasattr(request, "user") and request.user and request.user.is_authenticated):
+        if not (
+            hasattr(request, "user") and request.user and request.user.is_authenticated
+        ):
             return False
 
         if hasattr(request.user, attribute_name):
@@ -367,7 +377,9 @@ def user_in_group_with_permission(group_name: str, permission: str):
     """
 
     def _check(request, **kwargs):
-        if not (hasattr(request, "user") and request.user and request.user.is_authenticated):
+        if not (
+            hasattr(request, "user") and request.user and request.user.is_authenticated
+        ):
             return False
 
         has_group = request.user.groups.filter(name=group_name).exists()

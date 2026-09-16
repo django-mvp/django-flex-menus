@@ -287,7 +287,11 @@ class MenuItem(Node):
         if existing_child:
             children_list = list(self.children)
             insert_index = children_list.index(existing_child) + 1
-            self.children = [*children_list[:insert_index], child, *children_list[insert_index:]]
+            self.children = [
+                *children_list[:insert_index],
+                child,
+                *children_list[insert_index:],
+            ]
         else:
             raise ValueError(f"No child with name '{named}' found.")
 
@@ -333,7 +337,9 @@ class MenuItem(Node):
         # maxlevel=1 should search direct children, so we need anytree maxlevel=2
         anytree_maxlevel = maxlevel + 1 if maxlevel is not None else None
 
-        result = search.find_by_attr(self, value=name, name="name", maxlevel=anytree_maxlevel)
+        result = search.find_by_attr(
+            self, value=name, name="name", maxlevel=anytree_maxlevel
+        )
         return result  # type: ignore[no-any-return]
 
     def print_tree(self) -> str:
@@ -401,7 +407,9 @@ class MenuItem(Node):
 
         # Process children if this is a parent
         # Use _original_children if available (from copy), otherwise use self.children
-        children_to_process = getattr(processed, "_original_children", processed.children)
+        children_to_process = getattr(
+            processed, "_original_children", processed.children
+        )
         if children_to_process:
             processed_children = []
             for child in children_to_process:
@@ -492,12 +500,18 @@ class MenuItem(Node):
                     )
                     if param_names:
                         # Only pass kwargs that are in the URL pattern
-                        filtered_kwargs = {k: v for k, v in kwargs.items() if k in param_names}
-                        logger_instance.debug(f"Filtered kwargs for '{self.view_name}': {list(filtered_kwargs.keys())}")
+                        filtered_kwargs = {
+                            k: v for k, v in kwargs.items() if k in param_names
+                        }
+                        logger_instance.debug(
+                            f"Filtered kwargs for '{self.view_name}': {list(filtered_kwargs.keys())}"
+                        )
                 except NoReverseMatch:
                     # Pattern not found, use all kwargs
                     logger_instance = logging.getLogger(__name__)
-                    logger_instance.debug(f"Could not find URL pattern for '{self.view_name}', using all kwargs")
+                    logger_instance.debug(
+                        f"Could not find URL pattern for '{self.view_name}', using all kwargs"
+                    )
 
             try:
                 url = reverse(self.view_name, args=args, kwargs=filtered_kwargs)
@@ -505,17 +519,27 @@ class MenuItem(Node):
                 # Only log if explicitly configured to do so
                 if _should_log_url_failures():
                     logger = logging.getLogger(__name__)
-                    logger.warning(f"Could not reverse URL for view '{self.view_name}' in menu item '{self.name}'")
+                    logger.warning(
+                        f"Could not reverse URL for view '{self.view_name}' in menu item '{self.name}'"
+                    )
                     logger.warning(f"Reverse error: {e}")
                     try:
-                        param_names_for_log = set(get_required_url_params(self.view_name))
+                        param_names_for_log = set(
+                            get_required_url_params(self.view_name)
+                        )
                         if param_names_for_log:
-                            logger.warning(f"Detected URL params: {param_names_for_log}")
+                            logger.warning(
+                                f"Detected URL params: {param_names_for_log}"
+                            )
                             logger.warning(f"Filtered kwargs: {filtered_kwargs}")
                         else:
-                            logger.warning(f"Could not detect URL params - passed all kwargs: {list(kwargs.keys())}")
+                            logger.warning(
+                                f"Could not detect URL params - passed all kwargs: {list(kwargs.keys())}"
+                            )
                     except NoReverseMatch:
-                        logger.warning(f"Could not detect URL params - passed all kwargs: {list(kwargs.keys())}")
+                        logger.warning(
+                            f"Could not detect URL params - passed all kwargs: {list(kwargs.keys())}"
+                        )
                 # Cache failure for static URLs
                 if not args and not kwargs:
                     self._cached_url = None
@@ -534,7 +558,9 @@ class MenuItem(Node):
                 # Only log if explicitly configured to do so
                 if _should_log_url_failures():
                     logger = logging.getLogger(__name__)
-                    logger.warning(f"Error calling URL function for menu item '{self.name}': {e}")
+                    logger.warning(
+                        f"Error calling URL function for menu item '{self.name}': {e}"
+                    )
                 return None
 
         # Static URL string

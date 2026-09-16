@@ -44,7 +44,9 @@ def check(c):
 
     print("\n" + "=" * 60)
     print("✅ All checks passed.")
-    print("   Releases are cut by dispatching the Prepare Release workflow — see AGENTS.md.")
+    print(
+        "   Releases are cut by dispatching the Prepare Release workflow — see AGENTS.md."
+    )
 
 
 @task
@@ -52,4 +54,6 @@ def live_docs(c):
     """
     Build the documentation and serve it with live reload
     """
-    c.run("poetry run sphinx-autobuild -b html --host 0.0.0.0 --port 9000 --watch . -c . . _build/html")
+    c.run(
+        "poetry run sphinx-autobuild -b html --host 0.0.0.0 --port 9000 --watch . -c . . _build/html"
+    )

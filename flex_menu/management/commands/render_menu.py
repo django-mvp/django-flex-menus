@@ -13,7 +13,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.stdout.write(self.style.HTTP_INFO("Django Flex Menu:"))
-        self.stdout.write(self.style.HTTP_INFO("========================================\n"))
+        self.stdout.write(
+            self.style.HTTP_INFO("========================================\n")
+        )
         if name := options.get("name"):
             menu = root.get(name)
             if menu:
