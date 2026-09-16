@@ -3,17 +3,22 @@ Shared test configuration and fixtures for django-flex-menus.
 """
 
 import pytest
-from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Group, Permission
 from django.test import RequestFactory, override_settings
 
 from flex_menu import MenuItem, root
+from tests.factories import GroupFactory, PermissionFactory, UserFactory
 
 
 @pytest.fixture
 def request_factory():
     """Provides a Django RequestFactory for creating mock requests."""
     return RequestFactory()
+
+
+@pytest.fixture
+def get_request(request_factory):
+    """Creates a basic GET request."""
+    return request_factory.get("/")
 
 
 @pytest.fixture
@@ -51,54 +56,25 @@ def superuser_request(request_factory, superuser):
 @pytest.fixture
 def user():
     """Creates a regular user."""
-    import uuid
-
-    User = get_user_model()
-    unique_id = str(uuid.uuid4())[:8]
-    return User.objects.create_user(
-        username=f"testuser_{unique_id}",
-        email=f"test_{unique_id}@example.com",
-        password="testpass123",
-    )
+    return UserFactory()
 
 
 @pytest.fixture
 def staff_user():
     """Creates a staff user."""
-    import uuid
-
-    User = get_user_model()
-    unique_id = str(uuid.uuid4())[:8]
-    return User.objects.create_user(
-        username=f"staffuser_{unique_id}",
-        email=f"staff_{unique_id}@example.com",
-        password="testpass123",
-        is_staff=True,
-    )
+    return UserFactory(is_staff=True)
 
 
 @pytest.fixture
 def superuser():
     """Creates a superuser."""
-    import uuid
-
-    User = get_user_model()
-    unique_id = str(uuid.uuid4())[:8]
-    return User.objects.create_superuser(
-        username=f"admin_{unique_id}",
-        email=f"admin_{unique_id}@example.com",
-        password="testpass123",
-    )
+    return UserFactory(is_staff=True, is_superuser=True)
 
 
 @pytest.fixture
 def user_with_permissions(user):
     """Creates a user with specific permissions."""
-    permission = Permission.objects.get_or_create(
-        codename="test_permission",
-        name="Test Permission",
-        content_type_id=1,  # Generic content type
-    )[0]
+    permission = PermissionFactory()
     user.user_permissions.add(permission)
     return user
 
@@ -106,10 +82,7 @@ def user_with_permissions(user):
 @pytest.fixture
 def user_with_group(user):
     """Creates a user in a specific group."""
-    import uuid
-
-    unique_id = str(uuid.uuid4())[:8]
-    group = Group.objects.create(name=f"testgroup_{unique_id}")
+    group = GroupFactory()
     user.groups.add(group)
     # Store the group name for test reference
     user._test_group_name = group.name

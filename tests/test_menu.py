@@ -7,18 +7,6 @@ from django.test import RequestFactory
 from flex_menu import MenuItem, root
 
 
-@pytest.fixture
-def request_factory():
-    """Create request factory."""
-    return RequestFactory()
-
-
-@pytest.fixture
-def get_request(request_factory):
-    """Create a GET request."""
-    return request_factory.get("/")
-
-
 class TestMenuItemCreation:
     """Test MenuItem instantiation and validation."""
 

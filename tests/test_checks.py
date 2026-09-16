@@ -3,43 +3,8 @@
 import warnings
 
 import pytest
-from django.contrib.auth.models import Group, Permission, User
-from django.contrib.contenttypes.models import ContentType
-from django.test import RequestFactory
 
-
-@pytest.fixture
-def request_factory():
-    """Create request factory."""
-    return RequestFactory()
-
-
-@pytest.fixture
-def user():
-    """Create a regular user."""
-    return User.objects.create_user(username="testuser", password="testpass123")
-
-
-@pytest.fixture
-def staff_user():
-    """Create a staff user."""
-    return User.objects.create_user(
-        username="staffuser", password="testpass123", is_staff=True
-    )
-
-
-@pytest.fixture
-def superuser():
-    """Create a superuser."""
-    return User.objects.create_user(
-        username="superuser", password="testpass123", is_superuser=True, is_staff=True
-    )
-
-
-@pytest.fixture
-def get_request(request_factory):
-    """Create a basic GET request."""
-    return request_factory.get("/")
+from tests.factories import GroupFactory, PermissionFactory
 
 
 @pytest.mark.django_db
@@ -151,7 +116,7 @@ class TestGroupChecks:
         """Test user_in_any_group with user in one group."""
         from flex_menu.checks import user_in_any_group
 
-        group = Group.objects.create(name="authors")
+        group = GroupFactory(name="authors")
         user.groups.add(group)
         get_request.user = user
 
@@ -162,8 +127,8 @@ class TestGroupChecks:
         """Test user_in_any_group with multiple groups."""
         from flex_menu.checks import user_in_any_group
 
-        group1 = Group.objects.create(name="authors")
-        Group.objects.create(name="editors")
+        group1 = GroupFactory(name="authors")
+        GroupFactory(name="editors")
         user.groups.add(group1)
         get_request.user = user
 
@@ -174,7 +139,7 @@ class TestGroupChecks:
         """Test user_in_any_group with user not in specified groups."""
         from flex_menu.checks import user_in_any_group
 
-        group = Group.objects.create(name="viewers")
+        group = GroupFactory(name="viewers")
         user.groups.add(group)
         get_request.user = user
 
@@ -195,8 +160,8 @@ class TestGroupChecks:
         """Test user_in_all_groups with user in all groups."""
         from flex_menu.checks import user_in_all_groups
 
-        group1 = Group.objects.create(name="authors")
-        group2 = Group.objects.create(name="editors")
+        group1 = GroupFactory(name="authors")
+        group2 = GroupFactory(name="editors")
         user.groups.add(group1, group2)
         get_request.user = user
 
@@ -207,8 +172,8 @@ class TestGroupChecks:
         """Test user_in_all_groups with user in only some groups."""
         from flex_menu.checks import user_in_all_groups
 
-        group1 = Group.objects.create(name="authors")
-        Group.objects.create(name="editors")
+        group1 = GroupFactory(name="authors")
+        GroupFactory(name="editors")
         user.groups.add(group1)
         get_request.user = user
 
@@ -234,12 +199,7 @@ class TestPermissionChecks:
         """Test user_has_any_permission with user having one permission."""
         from flex_menu.checks import user_has_any_permission
 
-        content_type = ContentType.objects.get_for_model(User)
-        perm = Permission.objects.create(
-            codename="test_permission",
-            name="Test Permission",
-            content_type=content_type,
-        )
+        perm = PermissionFactory(codename="test_permission", name="Test Permission")
         user.user_permissions.add(perm)
         get_request.user = user
 
@@ -268,13 +228,8 @@ class TestPermissionChecks:
         """Test user_has_all_permissions with user having all permissions."""
         from flex_menu.checks import user_has_all_permissions
 
-        content_type = ContentType.objects.get_for_model(User)
-        perm1 = Permission.objects.create(
-            codename="test_perm1", name="Test Perm 1", content_type=content_type
-        )
-        perm2 = Permission.objects.create(
-            codename="test_perm2", name="Test Perm 2", content_type=content_type
-        )
+        perm1 = PermissionFactory(codename="test_perm1", name="Test Perm 1")
+        perm2 = PermissionFactory(codename="test_perm2", name="Test Perm 2")
         user.user_permissions.add(perm1, perm2)
         get_request.user = user
 
@@ -285,10 +240,7 @@ class TestPermissionChecks:
         """Test user_has_all_permissions with user having only some permissions."""
         from flex_menu.checks import user_has_all_permissions
 
-        content_type = ContentType.objects.get_for_model(User)
-        perm1 = Permission.objects.create(
-            codename="test_perm1", name="Test Perm 1", content_type=content_type
-        )
+        perm1 = PermissionFactory(codename="test_perm1", name="Test Perm 1")
         user.user_permissions.add(perm1)
         get_request.user = user
 
@@ -491,13 +443,10 @@ class TestCombinedChecks:
         """Test user_in_group_with_permission when both conditions are met."""
         from flex_menu.checks import user_in_group_with_permission
 
-        group = Group.objects.create(name="editors")
+        group = GroupFactory(name="editors")
         user.groups.add(group)
 
-        content_type = ContentType.objects.get_for_model(User)
-        perm = Permission.objects.create(
-            codename="publish_post", name="Publish Post", content_type=content_type
-        )
+        perm = PermissionFactory(codename="publish_post", name="Publish Post")
         user.user_permissions.add(perm)
         get_request.user = user
 
@@ -508,7 +457,7 @@ class TestCombinedChecks:
         """Test user_in_group_with_permission when only in group."""
         from flex_menu.checks import user_in_group_with_permission
 
-        group = Group.objects.create(name="editors")
+        group = GroupFactory(name="editors")
         user.groups.add(group)
         get_request.user = user
 
@@ -519,11 +468,8 @@ class TestCombinedChecks:
         """Test user_in_group_with_permission when only has permission."""
         from flex_menu.checks import user_in_group_with_permission
 
-        Group.objects.create(name="editors")
-        content_type = ContentType.objects.get_for_model(User)
-        perm = Permission.objects.create(
-            codename="publish_post", name="Publish Post", content_type=content_type
-        )
+        GroupFactory(name="editors")
+        perm = PermissionFactory(codename="publish_post", name="Publish Post")
         user.user_permissions.add(perm)
         get_request.user = user
 
