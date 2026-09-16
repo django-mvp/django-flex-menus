@@ -2,25 +2,12 @@
 
 import pytest
 from django.template import Context, Template, TemplateSyntaxError
-from django.test import RequestFactory
 
 from flex_menu import MenuItem, root
 
 
 @pytest.fixture
-def request_factory():
-    """Create request factory."""
-    return RequestFactory()
-
-
-@pytest.fixture
-def get_request(request_factory):
-    """Create a GET request."""
-    return request_factory.get("/")
-
-
-@pytest.fixture
-def test_menu():
+def sample_menu():
     """Create a test menu structure."""
     # Clean up any existing test menu
     existing = root.get("test_menu")
@@ -58,7 +45,7 @@ def nested_menu():
 class TestProcessMenuTag:
     """Test process_menu template tag."""
 
-    def test_process_menu_by_name(self, get_request, test_menu):
+    def test_process_menu_by_name(self, get_request, sample_menu):
         """Test processing menu by name."""
         template = Template(
             "{% load flex_menu %}"
@@ -70,7 +57,7 @@ class TestProcessMenuTag:
 
         assert "test_menu" in result
 
-    def test_process_menu_caches_on_request(self, get_request, test_menu):
+    def test_process_menu_caches_on_request(self, get_request, sample_menu):
         """Test that processed menu is cached on request object."""
         template = Template(
             "{% load flex_menu %}"
@@ -87,7 +74,7 @@ class TestProcessMenuTag:
         assert cached is not None
         assert cached.name == "test_menu"
 
-    def test_process_menu_reuses_cache(self, get_request, test_menu):
+    def test_process_menu_reuses_cache(self, get_request, sample_menu):
         """Test that processing same menu twice uses cache."""
         template = Template(
             "{% load flex_menu %}"
@@ -115,19 +102,19 @@ class TestProcessMenuTag:
         with pytest.raises(TemplateSyntaxError, match="does not exist"):
             template.render(context)
 
-    def test_process_menu_with_instance(self, get_request, test_menu):
+    def test_process_menu_with_instance(self, get_request, sample_menu):
         """Test processing menu by passing instance."""
         template = Template(
             "{% load flex_menu %}"
             "{% process_menu menu_obj as processed %}"
             "{{ processed.name }}"
         )
-        context = Context({"request": get_request, "menu_obj": test_menu})
+        context = Context({"request": get_request, "menu_obj": sample_menu})
         result = template.render(context)
 
         assert "test_menu" in result
 
-    def test_process_menu_filters_by_visibility(self, get_request, test_menu):
+    def test_process_menu_filters_by_visibility(self, get_request, sample_menu):
         """Test that processing respects visibility checks."""
         # Add hidden item
         MenuItem(
@@ -135,7 +122,7 @@ class TestProcessMenuTag:
             label="Hidden",
             url="/hidden/",
             check=False,
-            parent=test_menu,
+            parent=sample_menu,
         )
 
         template = Template(
@@ -163,7 +150,7 @@ class TestRenderMenuTag:
         with pytest.raises(TemplateSyntaxError):
             template.render(context)
 
-    def test_render_menu_uses_process_menu_caching(self, get_request, test_menu):
+    def test_render_menu_uses_process_menu_caching(self, get_request, sample_menu):
         """Test that render_menu uses process_menu's caching."""
         template = Template("{% load flex_menu %}{% render_menu 'test_menu' %}")
         context = Context({"request": get_request})
@@ -175,7 +162,7 @@ class TestRenderMenuTag:
         # Cache should still have been set during process_menu call
         # (even though rendering failed)
 
-    def test_render_menu_with_named_renderer(self, get_request, test_menu, settings):
+    def test_render_menu_with_named_renderer(self, get_request, sample_menu, settings):
         """Test render_menu with specific renderer name."""
         # Configure a test renderer
         settings.FLEX_MENUS = {
@@ -193,7 +180,7 @@ class TestRenderMenuTag:
         with pytest.raises(Exception):
             template.render(context)
 
-    def test_render_menu_includes_media_by_default(self, get_request, test_menu):
+    def test_render_menu_includes_media_by_default(self, get_request, sample_menu):
         """Test render_menu includes media by default with a renderer that has media."""
         # Create a simple test renderer with media
         from flex_menu.renderers import BaseRenderer
@@ -225,7 +212,7 @@ class TestRenderMenuTag:
         assert "test.js" in result
         assert "<nav>Test Menu</nav>" in result
 
-    def test_render_menu_exclude_media_with_parameter(self, get_request, test_menu):
+    def test_render_menu_exclude_media_with_parameter(self, get_request, sample_menu):
         """Test render_menu can exclude media with include_media=False."""
         # Create a simple test renderer with media
         from flex_menu.renderers import BaseRenderer
@@ -257,7 +244,7 @@ class TestRenderMenuTag:
         assert "test2.js" not in result
         assert "<nav>Test Menu</nav>" in result
 
-    def test_render_menu_requires_renderer(self, get_request, test_menu):
+    def test_render_menu_requires_renderer(self, get_request, sample_menu):
         """Test render_menu raises error when renderer is None."""
         template = Template(
             "{% load flex_menu %}{% render_menu 'test_menu' renderer=None %}"
@@ -357,7 +344,7 @@ class TestRenderItemTag:
 class TestTemplateTagIntegration:
     """Test template tags working together."""
 
-    def test_full_menu_workflow(self, get_request, test_menu, settings):
+    def test_full_menu_workflow(self, get_request, sample_menu, settings):
         """Test complete workflow: process and render."""
         settings.FLEX_MENUS = {
             "default": "flex_menu.renderers.SimpleHTMLRenderer",
@@ -378,7 +365,7 @@ class TestTemplateTagIntegration:
         assert "test_menu" in result
         assert "True" in result  # has_children
 
-    def test_process_and_render_separately(self, get_request, test_menu, settings):
+    def test_process_and_render_separately(self, get_request, sample_menu, settings):
         """Test processing and rendering as separate steps."""
         settings.FLEX_MENUS = {
             "default": "flex_menu.renderers.SimpleHTMLRenderer",
