@@ -1,8 +1,10 @@
-﻿"""
+"""
 Utility functions for django-flex-menus.
 
 This module contains helper functions for URL resolution and parameter extraction.
 """
+
+import contextlib
 
 from django.urls import get_resolver
 from django.urls.exceptions import NoReverseMatch
@@ -39,10 +41,9 @@ def get_required_url_params(view_name: str) -> frozenset:
         if hasattr(pat, "converters") and pat.converters:
             accumulated_params.update(pat.converters.keys())
         elif hasattr(pat, "regex"):
-            try:
+            # A pattern without a compiled regex contributes no named params.
+            with contextlib.suppress(Exception):
                 accumulated_params.update(pat.regex.groupindex.keys())
-            except Exception:
-                pass
         current = sub_resolver
 
     # Look up the local view name in the terminal resolver''s reverse_dict.

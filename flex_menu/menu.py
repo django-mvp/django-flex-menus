@@ -140,7 +140,7 @@ class MenuItem(Node):
         self.selected = False
         self.url: str | None = None  # Resolved URL
         self.request: WSGIRequest | None = None
-        self._processed_children: list["MenuItem"] = []
+        self._processed_children: list[MenuItem] = []
 
     def __str__(self) -> str:
         return f"MenuItem(name={self.name})"
@@ -287,7 +287,7 @@ class MenuItem(Node):
         if existing_child:
             children_list = list(self.children)
             insert_index = children_list.index(existing_child) + 1
-            self.children = children_list[:insert_index] + [child] + children_list[insert_index:]
+            self.children = [*children_list[:insert_index], child, *children_list[insert_index:]]
         else:
             raise ValueError(f"No child with name '{named}' found.")
 
@@ -432,12 +432,10 @@ class MenuItem(Node):
         Creates a copy that maintains the tree structure so depth calculations work.
         The copy will be detached from the global root but maintain proper parent-child relationships.
         """
-        # If this has a parent (and it's not the global root), recursively copy parent first
-        # This ensures the copy maintains proper depth in the tree
-        if self.parent and self.parent.name != "DjangoFlexMenu":
-            parent_copy = _NO_PARENT  # Will be set when parent processes us as a child
-        else:
-            parent_copy = _NO_PARENT  # Top-level or root
+        # The copy starts detached whether this item sits under another item or at
+        # the top of the tree: a nested copy gets its parent when that parent
+        # processes it as a child, and a top-level one never has any to get.
+        parent_copy = _NO_PARENT
 
         # Create copy with detached parent (will be attached by parent's processing)
         copy_instance = self.__class__(
@@ -503,10 +501,6 @@ class MenuItem(Node):
 
             try:
                 url = reverse(self.view_name, args=args, kwargs=filtered_kwargs)
-                # Cache static URLs for reuse
-                if not args and not kwargs:
-                    self._cached_url = url
-                return url
             except NoReverseMatch as e:
                 # Only log if explicitly configured to do so
                 if _should_log_url_failures():
@@ -526,6 +520,11 @@ class MenuItem(Node):
                 if not args and not kwargs:
                     self._cached_url = None
                 return None
+            else:
+                # Cache static URLs for reuse
+                if not args and not kwargs:
+                    self._cached_url = url
+                return url
 
         # Callable URL function
         elif self._url and callable(self._url):
@@ -633,10 +632,9 @@ class Menu(MenuItem):
         Override parent's method to use MenuItem constructor directly,
         avoiding the Menu class's automatic parent=root assignment.
         """
-        if self.parent and self.parent.name != "DjangoFlexMenu":
-            parent_copy = _NO_PARENT
-        else:
-            parent_copy = _NO_PARENT
+        # Detached for the same reason as MenuItem._create_request_copy: the
+        # parent attaches the copy while processing it as a child, if there is one.
+        parent_copy = _NO_PARENT
 
         # Use MenuItem directly, not self.__class__, to avoid Menu's parent=root
         copy_instance = MenuItem(

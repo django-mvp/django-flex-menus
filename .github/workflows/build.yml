@@ -1,107 +1,25 @@
 name: Build
 
 on:
-  workflow_run:
-    workflows: ["Tests"]
-    types: [completed]
-    branches: [main]
+  push:
+    branches:
+      - main
+    paths:
+      - 'flex_menu/**'
+      - 'pyproject.toml'
+      - 'poetry.lock'
+      - '.pre-commit-config.yaml'
+      - 'ruff-shared.toml'
+      - '.github/workflows/build.yml'
+  # No paths filter on pull_request: these checks are ruleset-required, and a
+  # path-filtered required check never reports on out-of-scope PRs, blocking merge.
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  code-quality:
-    name: Code Quality
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    timeout-minutes: 15
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
-
-      - name: Set up Poetry env
-        uses: SamuelJennings/cached-poetry-action@v2.0
-        with:
-          python-version: '3.12'
-
-      - name: Load cached pre-commit
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pre-commit
-          key: pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
-
-      - name: Check Poetry lock file consistency
-        run: poetry check --lock
-
-      - name: Run pre-commit checks
-        run: |
-          pip install pre-commit
-          SKIP=mypy,deptry pre-commit run --all-files
-
-  security:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
-    timeout-minutes: 15
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-
-      - name: Set up Poetry env
-        uses: SamuelJennings/cached-poetry-action@v2.0
-        with:
-          python-version: '3.12'
-
-      - name: Run bandit security linter
-        run: |
-          pip install bandit[toml]
-          bandit -r flex_menu/ -f json -o bandit-report.json || true
-
-      - name: Upload bandit report
-        uses: actions/upload-artifact@v5
-        if: always()
-        with:
-          name: bandit-report
-          path: bandit-report.json
-
-      - name: Run safety check for known vulnerabilities
-        run: |
-          pip install safety
-          safety check --json --output safety-report.json || true
-
-      - name: Upload safety report
-        uses: actions/upload-artifact@v5
-        if: always()
-        with:
-          name: safety-report
-          path: safety-report.json
-
-  package:
-    name: Build Package
-    runs-on: ubuntu-latest
-    needs: [code-quality]
-    timeout-minutes: 10
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-
-      - name: Set up Poetry env
-        uses: SamuelJennings/cached-poetry-action@v2.0
-        with:
-          python-version: '3.12'
-
-      - name: Build package
-        run: poetry build
-
-      - name: Check package metadata
-        run: poetry check
-
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v5
-        with:
-          name: dist
-          path: dist/
+  call-build:
+    uses: django-mvp/shared/.github/workflows/build.yml@v0.4.1
+    with:
+      source-dir: flex_menu
+    secrets: inherit

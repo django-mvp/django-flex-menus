@@ -261,9 +261,10 @@ def user_has_profile(request, **kwargs):
         if hasattr(request.user, attr):
             try:
                 profile = getattr(request.user, attr)
-                return profile is not None
             except AttributeError:
                 continue
+            else:
+                return profile is not None
 
     return True  # Assume profile exists if no profile model detected
 

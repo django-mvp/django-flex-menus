@@ -1,0 +1,54 @@
+name: Publish
+
+# Publishes to PyPI when a release is published (or a v* tag is pushed by a
+# user). Release creation itself is owned by the Tag Release workflow; the
+# CHANGELOG section is written before release by Prepare Release.
+#
+# The filename matters: PyPI's trusted publisher is configured against a
+# specific workflow file, so renaming this one breaks publishing with an
+# invalid-publisher error until the PyPI project settings are updated to match.
+#
+# Note: releases/tags created by the Tag Release workflow with the default
+# GITHUB_TOKEN do not trigger this workflow — set the RELEASE_TOKEN org secret
+# (see django-mvp/shared README, Release Flow) or run this manually via
+# workflow_dispatch.
+
+on:
+  push:
+    tags:
+      - "v*"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  publish-pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    permissions:
+      # IMPORTANT: this permission is mandatory for trusted publishing
+      id-token: write
+      contents: read
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Poetry env
+        uses: django-mvp/shared/.github/actions/setup-poetry@v0.4.1
+        with:
+          python-version: '3.13'
+
+      - name: Build package
+        run: |
+          poetry check --lock
+          poetry build
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          # Both triggers above fire for a single release, because creating a
+          # release also pushes its tag. Two jobs then build identical artifacts
+          # and race to upload; the loser would otherwise fail with "400 File
+          # already exists". PyPI rejects a same-version re-upload regardless of
+          # this setting, so nothing is masked by making that case a no-op.
+          skip-existing: true

@@ -1,0 +1,22 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump level (patch | minor | major) or an explicit version like 1.2.3'
+        type: string
+        required: true
+        default: 'patch'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  call-prepare-release:
+    uses: django-mvp/shared/.github/workflows/prepare-release.yml@v0.4.1
+    with:
+      bump: ${{ inputs.bump }}
+    secrets:
+      RELEASE_TOKEN: ${{ secrets.RELEASE_TOKEN }}
