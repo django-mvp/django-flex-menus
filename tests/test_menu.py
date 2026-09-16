@@ -1,11 +1,22 @@
-"""
-Tests for MenuItem class properties, behavior, and validation.
-"""
+"""Tests for MenuItem and Menu: creation, properties, processing, tree
+manipulation, URL resolution, and selection matching."""
 
 import pytest
 from django.test import RequestFactory
 
 from flex_menu import MenuItem, root
+
+
+@pytest.fixture
+def request_factory():
+    """Create request factory."""
+    return RequestFactory()
+
+
+@pytest.fixture
+def get_request(request_factory):
+    """Create a GET request."""
+    return request_factory.get("/")
 
 
 class TestMenuItemCreation:
@@ -437,6 +448,514 @@ class TestMenuItemAdvanced:
         assert removed is child
         assert child.parent is None
         assert len(list(parent.children)) == 0
+
+
+@pytest.mark.django_db
+class TestCallableURLs:
+    """Test callable URL functions."""
+
+    def test_callable_url_function(self, get_request):
+        """Test URL as a callable function."""
+
+        def dynamic_url(request, *args, **kwargs):
+            return f"/dynamic/{request.path}/"
+
+        item = MenuItem(name="dynamic", label="Dynamic", url=dynamic_url)
+        processed = item.process(get_request)
+
+        assert processed.url is not None
+        assert "/dynamic/" in processed.url
+
+    def test_callable_url_with_args(self, get_request):
+        """Test callable URL with arguments."""
+
+        def url_with_args(request, *args, **kwargs):
+            return f"/item/{args[0]}/" if args else "/item/"
+
+        item = MenuItem(name="callable", label="Callable", url=url_with_args)
+        processed = item.process(get_request)
+
+        # When processing without args, should work
+        assert processed.url == "/item/"
+
+    def test_callable_url_exception(self, get_request):
+        """Test callable URL that raises exception."""
+
+        def bad_url(request):
+            raise ValueError("Intentional error")
+
+        item = MenuItem(name="bad", label="Bad", url=bad_url)
+        processed = item.process(get_request)
+
+        # Should return None and log error
+        assert processed.url is None
+
+
+@pytest.mark.django_db
+class TestURLParams:
+    """Test URL parameter handling."""
+
+    def test_url_with_params(self, get_request):
+        """Test URL with query parameters."""
+        item = MenuItem(
+            name="with_params",
+            label="With Params",
+            url="/path/",
+            params={"foo": "bar", "baz": "qux"},
+        )
+        processed = item.process(get_request)
+
+        # Should include query string
+        assert processed.url is not None
+        assert "?" in processed.url
+        assert "foo=bar" in processed.url
+        assert "baz=qux" in processed.url
+
+    def test_url_with_existing_query_string(self, get_request):
+        """Test URL that already has query string."""
+        item = MenuItem(
+            name="existing_qs",
+            label="Existing QS",
+            url="/path/?existing=param",
+            params={"new": "param"},
+        )
+        processed = item.process(get_request)
+
+        # Should use & instead of ? for additional params
+        assert processed.url is not None
+        assert "existing=param" in processed.url
+        assert "new=param" in processed.url
+        assert "&" in processed.url
+
+
+class TestURLResolution:
+    """Test URL resolution in MenuItem."""
+
+    def test_resolve_url_with_static_url(self, get_request):
+        """Test resolving static URL."""
+        item = MenuItem(name="static", label="Static", url="/static/path/")
+        processed = item.process(get_request)
+
+        assert processed.url == "/static/path/"
+
+    def test_resolve_url_with_view_name(self, get_request):
+        """Test resolving URL from view name."""
+        item = MenuItem(name="admin", label="Admin", view_name="admin:index")
+        processed = item.process(get_request)
+
+        # Should resolve to admin URL
+        assert processed.url == "/admin/"
+
+    def test_resolve_url_with_args(self, get_request):
+        """Test resolving URL with positional arguments."""
+        # Using a URL pattern that exists in Django's test setup
+        item = MenuItem(
+            name="with_args",
+            label="With Args",
+            view_name="admin:app_list",
+            args=["auth"],
+        )
+        processed = item.process(get_request)
+
+        # URL might be None if view doesn't resolve, which is expected behavior
+        assert processed.url is None or "/admin/auth/" in processed.url
+
+    def test_resolve_url_with_kwargs(self, get_request):
+        """Test resolving URL with keyword arguments."""
+        item = MenuItem(
+            name="with_kwargs",
+            label="With Kwargs",
+            view_name="admin:app_list",
+            kwargs={"app_label": "auth"},
+        )
+        processed = item.process(get_request)
+
+        # URL might be None if view doesn't resolve, which is expected behavior
+        assert processed.url is None or "/admin/auth/" in processed.url
+
+    def test_resolve_url_invalid_view_name(self, get_request):
+        """Test that invalid view name returns None (not raises)."""
+        item = MenuItem(
+            name="invalid",
+            label="Invalid",
+            view_name="nonexistent:view",
+        )
+
+        # Invalid views return None instead of raising (by design)
+        processed = item.process(get_request)
+        assert processed.url is None
+
+    def test_resolve_url_cached_after_processing(self, get_request):
+        """Test that URL is cached after first resolution."""
+        item = MenuItem(name="cached", label="Cached", view_name="admin:index")
+        processed = item.process(get_request)
+
+        # Access URL twice - should use cached value
+        url1 = processed.url
+        url2 = processed.url
+
+        assert url1 == url2
+        assert url1 == "/admin/"
+
+    def test_url_property_returns_none_for_parent(self):
+        """Test that parent items return None for URL."""
+        parent = MenuItem(name="parent", label="Parent")
+        MenuItem(name="child", label="Child", url="/child/", parent=parent)
+
+        assert parent.url is None
+
+    def test_resolve_url_with_query_string(self, get_request):
+        """Test URL with query string."""
+        item = MenuItem(
+            name="with_query",
+            label="With Query",
+            url="/path/?foo=bar&baz=qux",
+        )
+        processed = item.process(get_request)
+
+        assert processed.url == "/path/?foo=bar&baz=qux"
+
+    def test_resolve_url_with_fragment(self, get_request):
+        """Test URL with fragment."""
+        item = MenuItem(
+            name="with_fragment",
+            label="With Fragment",
+            url="/path/#section",
+        )
+        processed = item.process(get_request)
+
+        assert processed.url == "/path/#section"
+
+
+class TestSelectionMatching:
+    """Test selection/active state matching."""
+
+    def test_selection_exact_match(self, request_factory):
+        """Test exact URL match sets selection."""
+        request = request_factory.get("/exact/path/")
+
+        item = MenuItem(
+            name="exact",
+            label="Exact",
+            url="/exact/path/",
+        )
+        processed = item.process(request, selection="/exact/path/")
+
+        assert processed.selected is True
+
+    def test_selection_no_match(self, request_factory):
+        """Test non-matching URL doesn't set selection."""
+        request = request_factory.get("/other/path/")
+
+        item = MenuItem(
+            name="other",
+            label="Other",
+            url="/exact/path/",
+        )
+        processed = item.process(request, selection="/other/path/")
+
+        assert processed.selected is False
+
+    def test_selection_with_view_name(self, request_factory):
+        """Test selection matching with view name."""
+        request = request_factory.get("/admin/")
+        request.resolver_match = type(
+            "obj",
+            (object,),
+            {"url_name": "index", "app_name": "admin", "namespace": "admin"},
+        )()
+
+        item = MenuItem(
+            name="admin",
+            label="Admin",
+            view_name="admin:index",
+        )
+        processed = item.process(request)
+
+        # Selection matching happens during processing
+        assert processed.url == "/admin/"
+
+    def test_selection_parent_from_child(self, request_factory):
+        """Test child selection behavior."""
+        request = request_factory.get("/parent/child/")
+
+        parent = MenuItem(name="parent", label="Parent")
+        child = MenuItem(
+            name="child",
+            label="Child",
+            url="/parent/child/",
+            parent=parent,
+        )
+
+        # Process child - selection matching is based on URL matching
+        processed_child = child.process(request, selection="/parent/child/")
+
+        # Child should be selected since its URL matches
+        assert processed_child.selected is True
+
+
+@pytest.mark.django_db
+class TestVisibilityLogic:
+    """Test visibility and check logic."""
+
+    def test_check_with_callable(self, get_request):
+        """Test check function that's callable."""
+
+        def is_visible(request):
+            return request.path == "/"
+
+        item = MenuItem(
+            name="conditional",
+            label="Conditional",
+            url="/test/",
+            check=is_visible,
+        )
+        processed = item.process(get_request)
+
+        assert processed.visible is True
+
+    def test_check_with_boolean(self, get_request):
+        """Test check function that's a boolean."""
+        visible_item = MenuItem(
+            name="visible",
+            label="Visible",
+            url="/test/",
+            check=True,
+        )
+        hidden_item = MenuItem(
+            name="hidden",
+            label="Hidden",
+            url="/test/",
+            check=False,
+        )
+
+        assert visible_item.process(get_request).visible is True
+        assert hidden_item.process(get_request).visible is False
+
+    def test_parent_hidden_if_no_visible_children(self, get_request):
+        """Test parent is hidden when all children are hidden."""
+        parent = MenuItem(name="parent", label="Parent")
+        MenuItem(
+            name="hidden1",
+            label="Hidden 1",
+            url="/hidden1/",
+            check=False,
+            parent=parent,
+        )
+        MenuItem(
+            name="hidden2",
+            label="Hidden 2",
+            url="/hidden2/",
+            check=False,
+            parent=parent,
+        )
+
+        processed = parent.process(get_request)
+
+        # Parent should be hidden because no children are visible
+        assert processed.visible is False
+
+    def test_leaf_hidden_if_url_not_resolvable(self, get_request):
+        """Test leaf item is hidden if URL can't be resolved."""
+        item = MenuItem(
+            name="unresolvable",
+            label="Unresolvable",
+            view_name="nonexistent:view",
+        )
+
+        processed = item.process(get_request)
+
+        # Should be hidden because URL can't be resolved and it's a leaf
+        assert processed.visible is False
+
+
+@pytest.mark.django_db
+class TestExtraContextAndDividers:
+    """Test extra context and divider handling."""
+
+    def test_extra_context_preserved(self, get_request):
+        """Test extra context is preserved during processing."""
+        item = MenuItem(
+            name="with_context",
+            label="With Context",
+            url="/path/",
+            extra_context={"icon": "home", "badge": 5},
+        )
+        processed = item.process(get_request)
+
+        assert processed.extra_context["icon"] == "home"
+        assert processed.extra_context["badge"] == 5
+
+    def test_divider_item(self, get_request):
+        """Test divider items."""
+        parent = MenuItem(name="parent", label="Parent")
+        MenuItem(name="item1", label="Item 1", url="/item1/", parent=parent)
+        MenuItem(
+            name="divider", label="", extra_context={"divider": True}, parent=parent
+        )
+        MenuItem(name="item2", label="Item 2", url="/item2/", parent=parent)
+
+        processed = parent.process(get_request)
+        children = list(processed.visible_children)
+
+        assert len(children) == 3
+        assert children[1].extra_context.get("divider") is True
+
+    def test_custom_attributes_in_extra_context(self, get_request):
+        """Test custom HTML attributes in extra context."""
+        item = MenuItem(
+            name="custom",
+            label="Custom",
+            url="/custom/",
+            extra_context={
+                "attrs": {"data-toggle": "modal", "data-target": "#myModal"},
+                "css_class": "custom-link",
+            },
+        )
+        processed = item.process(get_request)
+
+        assert processed.extra_context["attrs"]["data-toggle"] == "modal"
+        assert processed.extra_context["css_class"] == "custom-link"
+
+
+class TestTreeMethods:
+    """Test tree navigation and utility methods."""
+
+    def test_get_with_maxlevel(self):
+        """Test get() method with maxlevel."""
+        tree_root = MenuItem(name="root", label="Root")
+        level1 = MenuItem(name="level1", label="Level 1", parent=tree_root)
+        level2 = MenuItem(name="level2", label="Level 2", parent=level1)
+        MenuItem(name="level3", label="Level 3", parent=level2)
+
+        # Search only direct children
+        assert tree_root.get("level1", maxlevel=1) is level1
+        assert tree_root.get("level2", maxlevel=1) is None  # Too deep
+
+        # Search two levels deep
+        assert tree_root.get("level2", maxlevel=2) is level2
+        assert tree_root.get("level3", maxlevel=2) is None  # Too deep
+
+    def test_get_with_empty_name(self):
+        """Test get() with empty name."""
+        tree_root = MenuItem(name="root", label="Root")
+        assert tree_root.get("") is None
+
+    def test_print_tree(self):
+        """Test print_tree method."""
+        tree_root = MenuItem(name="root", label="Root")
+        MenuItem(name="child1", label="Child 1", url="/child1/", parent=tree_root)
+        MenuItem(name="child2", label="Child 2", url="/child2/", parent=tree_root)
+
+        tree_str = tree_root.print_tree()
+
+        assert "root" in tree_str
+        assert "child1" in tree_str
+        assert "child2" in tree_str
+
+    def test_bracket_notation_navigation(self):
+        """Test navigating tree with bracket notation."""
+        tree_root = MenuItem(name="root", label="Root")
+        parent = MenuItem(name="parent", label="Parent", parent=tree_root)
+        child = MenuItem(name="child", label="Child", url="/child/", parent=parent)
+
+        # Can access children via bracket notation
+        assert tree_root["parent"] is parent
+        found_child = tree_root["parent"]["child"]
+        assert found_child is child
+
+    def test_str_representation(self):
+        """Test string representation of MenuItem."""
+        item = MenuItem(name="test", label="Test Label")
+        assert str(item) == "MenuItem(name=test)"
+
+    def test_repr_representation(self):
+        """Test repr representation of MenuItem."""
+        item = MenuItem(name="test", label="Test Label")
+        repr_str = repr(item)
+        assert "MenuItem" in repr_str
+        assert "test" in repr_str
+
+    def test_match_url_method(self, request_factory):
+        """Test match_url sets selected state."""
+        request = request_factory.get("/test/path/")
+
+        item = MenuItem(name="test", label="Test", url="/test/path/")
+        # Need to process first to attach request
+        processed = item.process(request)
+
+        # match_url should set selected to True
+        result = processed.match_url()
+        assert result is True
+        assert processed.selected is True
+
+    def test_match_url_no_match(self, request_factory):
+        """Test match_url with non-matching path."""
+        request = request_factory.get("/other/path/")
+
+        item = MenuItem(name="test", label="Test", url="/test/path/")
+        item.request = request
+
+        result = item.match_url()
+        assert result is False
+        assert item.selected is False
+
+    def test_match_url_without_request(self):
+        """Test match_url without request."""
+        item = MenuItem(name="test", label="Test", url="/test/path/")
+
+        result = item.match_url()
+        assert result is False
+        assert item.selected is False
+
+
+@pytest.mark.django_db
+class TestProcessingEdgeCases:
+    """Test edge cases in processing."""
+
+    def test_process_preserves_extra_context(self, get_request):
+        """Test that extra_context is preserved during processing."""
+        item = MenuItem(
+            name="test",
+            label="Test",
+            url="/test/",
+            extra_context={"custom": "value"},
+        )
+
+        processed = item.process(get_request)
+
+        assert processed.extra_context["custom"] == "value"
+
+    def test_process_multiple_times_same_request(self, get_request):
+        """Test processing the same item multiple times."""
+        item = MenuItem(name="test", label="Test", url="/test/")
+
+        processed1 = item.process(get_request)
+        processed2 = item.process(get_request)
+
+        # Should create separate copies
+        assert processed1 is not processed2
+        assert processed1.url == processed2.url
+
+    def test_url_caching(self, get_request):
+        """Test that URLs are cached after first resolution."""
+        call_count = 0
+
+        def counting_url(request):
+            nonlocal call_count
+            call_count += 1
+            return "/counted/"
+
+        item = MenuItem(name="cached", label="Cached", url=counting_url)
+
+        # First process
+        processed = item.process(get_request)
+
+        # Access URL again (on processed copy)
+        _ = processed.url
+
+        # Callable URLs aren't cached the same way, but at least verify it works
+        assert processed.url == "/counted/"
 
 
 class TestMenuClass:

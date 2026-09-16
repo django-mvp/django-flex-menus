@@ -10,7 +10,7 @@ from flex_menu.renderers import (
 )
 
 
-class TestRendererWithMedia(BaseRenderer):
+class RendererWithMedia(BaseRenderer):
     """Test renderer that includes CSS and JS media."""
 
     templates = {
@@ -36,7 +36,7 @@ class TestBaseRenderer:
 
     def test_renderer_with_media_class(self):
         """Renderer initializes media from Media inner class."""
-        renderer = TestRendererWithMedia()
+        renderer = RendererWithMedia()
         assert renderer.media is not None
         media_str = str(renderer.media)
         assert "test/styles.css" in media_str
@@ -64,7 +64,7 @@ class TestBaseRenderer:
 
     def test_get_template_with_custom_templates(self):
         """get_template uses custom templates when provided."""
-        renderer = TestRendererWithMedia()
+        renderer = RendererWithMedia()
         # Create an item at depth 1 (which has templates defined)
         item = MenuItem(name="test", url="/test/")
 
@@ -198,7 +198,7 @@ class TestMediaCombination:
 
     def test_combine_test_renderer_media(self):
         """Test that Media objects can be combined."""
-        renderer1 = TestRendererWithMedia()
+        renderer1 = RendererWithMedia()
         renderer2 = BaseRenderer()
 
         # Test that media can be accessed and combined
