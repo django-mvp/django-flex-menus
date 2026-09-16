@@ -2,6 +2,7 @@
 
 import factory
 from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import make_password
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
@@ -12,7 +13,7 @@ class UserFactory(factory.django.DjangoModelFactory):
 
     username = factory.Sequence(lambda n: f"user{n}")
     email = factory.Sequence(lambda n: f"user{n}@example.com")
-    password = factory.PostGenerationMethodCall("set_password", "testpass123")
+    password = factory.LazyFunction(lambda: make_password("testpass123"))
 
 
 class GroupFactory(factory.django.DjangoModelFactory):

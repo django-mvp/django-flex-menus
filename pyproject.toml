@@ -57,24 +57,12 @@ build-backend = "poetry.core.masonry.api"
 DJANGO_SETTINGS_MODULE = "tests.settings"
 pythonpath = [".", "tests"]
 testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py", "tests.py", "*_tests.py"]
 addopts = [
     "--strict-markers",
     "--strict-config",
     "--verbose",
     "--tb=short",
     "-ra",
-]
-markers = [
-    "performance: marks tests as performance tests (deselect with '-m \"not performance\"')",
-    "integration: marks tests as integration tests",
-    "slow: marks tests as slow running (deselect with '-m \"not slow\"')",
-    "django_db: mark test to use django database",
-]
-filterwarnings = [
-    "ignore",
-    "ignore::DeprecationWarning",
-    "ignore::PendingDeprecationWarning",
 ]
 
 [tool.coverage.report]
