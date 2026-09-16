@@ -132,7 +132,7 @@ class TestBaseRenderer:
         """render() returns empty string for invisible items."""
         renderer = BaseRenderer()
         parent = MenuItem(name="menu")
-        item = MenuItem(name="test", url="/test/", parent=parent)
+        MenuItem(name="test", url="/test/", parent=parent)
 
         rf = RequestFactory()
         processed = parent.process(rf.get("/"))

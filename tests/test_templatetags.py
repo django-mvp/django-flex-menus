@@ -168,9 +168,6 @@ class TestRenderMenuTag:
         template = Template("{% load flex_menu %}{% render_menu 'test_menu' %}")
         context = Context({"request": get_request})
 
-        # This will fail due to missing templates, but we can check caching was attempted
-        cache_key = f"_processed_menu_test_menu_{id(get_request)}"
-
         # Should raise template error but cache should be set
         with pytest.raises(Exception):  # Template rendering will fail
             template.render(context)
@@ -204,7 +201,7 @@ class TestRenderMenuTag:
         class TestRendererWithMedia(BaseRenderer):
             """Test renderer with CSS/JS media."""
 
-            class Media:  # noqa: F811
+            class Media:
                 css = {"all": ["test.css"]}
                 js = ["test.js"]
 
@@ -236,7 +233,7 @@ class TestRenderMenuTag:
         class TestRendererNoMedia(BaseRenderer):
             """Test renderer with CSS/JS media."""
 
-            class Media:  # noqa: F811
+            class Media:
                 css = {"all": ["test2.css"]}
                 js = ["test2.js"]
 
@@ -448,7 +445,7 @@ class TestTemplateTagIntegration:
             return resource == "test_resource" and action == "edit"
 
         # Create test menu
-        test_ctx_menu = Menu(
+        Menu(
             name="test_context_menu",
             children=[
                 MenuItem(name="item1", url="/item1/", check=context_check),
@@ -485,7 +482,7 @@ class TestTemplateTagIntegration:
             # Simulate checking if request.user.id matches owner_id
             return owner_id == 123  # Would be request.user.id == owner_id in real use
 
-        test_owner_menu = Menu(
+        Menu(
             name="test_owner_menu",
             children=[
                 MenuItem(name="public", url="/public/"),
@@ -537,7 +534,7 @@ class TestTemplateTagIntegration:
             return f"/item/{pk}/" if pk else "/item/"
 
         # Create test menu with callable URL that requires kwargs
-        test_url_menu = Menu(
+        Menu(
             name="test_url_menu",
             children=[
                 MenuItem(name="detail", url=dynamic_url),
@@ -571,7 +568,7 @@ class TestTemplateTagIntegration:
         from flex_menu import Menu, MenuItem, root
 
         # Create test menu with view_name that doesn't need any kwargs
-        test_extra_menu = Menu(
+        Menu(
             name="test_extra_menu",
             children=[
                 MenuItem(name="admin", view_name="admin:index"),  # Doesn't need kwargs
