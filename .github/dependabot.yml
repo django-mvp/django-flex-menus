@@ -1,35 +1,56 @@
+# Family Dependabot configuration — materialized into each repo at onboarding.
+#
+# The load-bearing choice is the grouping: one group per ecosystem matching "*",
+# so a cycle's updates arrive as a SINGLE pull request. That is what makes
+# auto-merge-dependabot.yml viable — one PR, one set of checks, merged when they
+# pass. Partial grouping (a "django*" group, a "dev tools" group, everything else
+# loose) opens a PR per package instead, and they accumulate faster than anyone
+# merges them. FAIR-DM/fairdm reached thirteen open before onboarding.
+#
+# `reviewers:` is deliberately absent. GitHub removed that option on 2025-08-08
+# (announced 2025-04-29) because it overlapped with code owners; repos still
+# carrying it are being silently ignored. Use a CODEOWNERS file if review
+# assignment is wanted.
+#
+# Add a `docker` ecosystem only where a Dockerfile exists. Dependabot's docker
+# ecosystem scans Dockerfiles and does NOT read docker-compose.yml, so a docker
+# block in a compose-only repo never produces anything.
 version: 2
 updates:
-  # Enable version updates for Python dependencies
+  # Python dependencies (Poetry)
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 10
-    reviewers:
-      - "SamuelJennings"
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "python"
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      python-dependencies:
+        patterns:
+          - "*"
 
-  # Enable version updates for GitHub Actions
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "SamuelJennings"
+    open-pull-requests-limit: 3
     labels:
       - "dependencies"
       - "github-actions"
     commit-message:
       prefix: "chore"
       include: "scope"
+    groups:
+      github-actions:
+        patterns:
+          - "*"

@@ -21,7 +21,7 @@ class ContextMenuDemoView(TemplateView):
         slug = self.kwargs.get("slug", "demo-project")
 
         # Get or create a demo project with the specified slug
-        demo_project, created = Project.objects.get_or_create(
+        demo_project, _ = Project.objects.get_or_create(
             slug=slug,
             defaults={
                 "name": "Demo Project",

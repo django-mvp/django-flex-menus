@@ -10,57 +10,20 @@ on:
       - 'pyproject.toml'
       - 'poetry.lock'
       - '.github/workflows/tests.yml'
+  # No paths filter on pull_request: these checks are ruleset-required, and a
+  # path-filtered required check never reports on out-of-scope PRs, blocking merge.
   pull_request:
     types: [opened, synchronize, reopened]
-    paths:
-      - 'flex_menu/**'
-      - 'tests/**'
-      - 'pyproject.toml'
-      - 'poetry.lock'
-      - '.github/workflows/tests.yml'
   workflow_dispatch:
 
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    name: Test Python ${{ matrix.python-version }}, Django ${{ matrix.django-version }}
-    timeout-minutes: 20
-    strategy:
-      matrix:
-        python-version: ['3.12', '3.13']
-        django-version: ['5.0', '5.1', '5.2']
-      fail-fast: false
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-
-      - name: Set up Poetry env
-        uses: SamuelJennings/cached-poetry-action@v2.0
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Pin Django version
-        run: poetry run pip install "django~=${{ matrix.django-version }}"
-
-      - name: Run tests
-        run: |
-          if [ "${{ matrix.python-version }}" = "3.13" ] && [ "${{ matrix.django-version }}" = "5.2" ]; then
-            poetry run pytest --cov=flex_menu --cov-report=xml
-          else
-            poetry run pytest
-          fi
-
-      - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.13' && matrix.django-version == '5.2'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  call-tests:
+    uses: django-mvp/shared/.github/workflows/tests.yml@v0.4.1
+    with:
+      coverage-package: flex_menu
+      django-versions: '["5.2", "6.0"]'
+      # Test and lint tooling lives in the single (non-optional) dev group via
+      # the mvp-shared bundle, so the default `--with test` would fail. Empty
+      # args install main + dev + docs, which covers pytest.
+      poetry-install-args: ''
+    secrets: inherit

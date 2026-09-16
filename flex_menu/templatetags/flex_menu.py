@@ -35,8 +35,7 @@ def process_menu(context, menu, **kwargs):
         found_menu = root.get(menu_name)
         if not found_menu:
             raise template.TemplateSyntaxError(
-                f"Menu '{menu_name}' does not exist. "
-                "Run 'python manage.py render_menu' to examine the full menu tree."
+                f"Menu '{menu_name}' does not exist. Run 'python manage.py render_menu' to examine the full menu tree."
             )
         menu = found_menu
     else:
@@ -95,16 +94,11 @@ def render_menu(context, menu, renderer=None, include_media=True, **kwargs):
     # Require renderer parameter
     if renderer is None:
         raise TemplateSyntaxError(
-            "render_menu requires a 'renderer' parameter. "
-            "Example: {% render_menu 'main_nav' renderer='bootstrap5' %}"
+            "render_menu requires a 'renderer' parameter. Example: {% render_menu 'main_nav' renderer='bootstrap5' %}"
         )
 
-    # Get renderer instance (or use if already an instance)
-    if isinstance(renderer, str):
-        renderer_instance = get_renderer(renderer)
-    else:
-        # Assume it's already a renderer instance
-        renderer_instance = renderer
+    # Get renderer instance, or use what was passed if it is already one
+    renderer_instance = get_renderer(renderer) if isinstance(renderer, str) else renderer
 
     # Render menu content
     menu_html = renderer_instance.render(processed_menu, **kwargs)
@@ -115,9 +109,12 @@ def render_menu(context, menu, renderer=None, include_media=True, **kwargs):
         if media_html:
             # Media HTML contains link and script tags
             # Place before menu content (crispy-forms style)
-            return mark_safe(f"{media_html}\n{menu_html}")
+            # Both halves are renderer output: the media tags come from the
+            # renderer's own Media declaration and menu_html is already marked
+            # safe by the renderer, which autoescaped as it rendered.
+            return mark_safe(f"{media_html}\n{menu_html}")  # noqa: S308
 
-    return mark_safe(menu_html)
+    return mark_safe(menu_html)  # noqa: S308
 
 
 @register.simple_tag(takes_context=True)

@@ -64,7 +64,7 @@ class BaseRenderer:
         """Initialize renderer and setup media if defined."""
         # Check if renderer defines a Media class
         if hasattr(self, "Media"):
-            self._media = Media(getattr(self, "Media"))
+            self._media = Media(self.Media)
         else:
             self._media = Media()
 
@@ -102,7 +102,7 @@ class BaseRenderer:
 
             if not depth_templates:
                 # No default provided - raise error
-                supported_depths = [k for k in self.templates.keys() if k != "default"]
+                supported_depths = [k for k in self.templates if k != "default"]
                 raise ValueError(
                     f"Renderer {self.__class__.__name__} does not support depth {depth}. "
                     f"Supported depths: {supported_depths}. "
@@ -110,10 +110,7 @@ class BaseRenderer:
                 )
 
         # Determine template key based on item properties
-        if item.has_children:
-            template_key = "parent"
-        else:
-            template_key = "leaf"
+        template_key = "parent" if item.has_children else "leaf"
 
         # Get the actual template path
         template = depth_templates.get(template_key)
@@ -175,7 +172,9 @@ class BaseRenderer:
         template = self.get_template(item)
         context = self.get_context_data(item, **kwargs)
 
-        return mark_safe(render_to_string(template, context))
+        # render_to_string has already autoescaped every value it interpolated, so
+        # what comes back is markup this renderer produced, not user input.
+        return mark_safe(render_to_string(template, context))  # noqa: S308
 
 
 def get_renderer(name: str | None = None) -> BaseRenderer:
