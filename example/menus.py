@@ -66,7 +66,9 @@ main_navigation = MenuItem(
         ),
         MenuItem(
             "context_demo",
-            url=lambda request: reverse("context_menu_demo", kwargs={"slug": "demo-project"}),
+            url=lambda request: reverse(
+                "context_menu_demo", kwargs={"slug": "demo-project"}
+            ),
             extra_context={
                 "label": "Context Menus Demo",
                 "icon": "fas fa-flask",
@@ -128,7 +130,9 @@ project_actions = Menu(
         MenuItem(
             "publish_project",
             view_name="context_menu_demo",
-            check=lambda request, project=None, **kwargs: project and project.status == "draft",
+            check=lambda request, project=None, **kwargs: (
+                project and project.status == "draft"
+            ),
             extra_context={
                 "label": "Publish",
                 "icon": "fas fa-rocket",
@@ -138,7 +142,9 @@ project_actions = Menu(
         MenuItem(
             "archive_project",
             view_name="context_menu_demo",
-            check=lambda request, project=None, **kwargs: project and project.status == "active",
+            check=lambda request, project=None, **kwargs: (
+                project and project.status == "active"
+            ),
             extra_context={
                 "label": "Archive",
                 "icon": "fas fa-archive",
@@ -156,7 +162,9 @@ project_status_menu = Menu(
     children=[
         MenuItem(
             "draft_section",
-            check=lambda request, project=None, **kwargs: project and project.status == "draft",
+            check=lambda request, project=None, **kwargs: (
+                project and project.status == "draft"
+            ),
             extra_context={
                 "label": "Draft Actions",
                 "is_header": True,
@@ -176,7 +184,9 @@ project_status_menu = Menu(
         ),
         MenuItem(
             "active_section",
-            check=lambda request, project=None, **kwargs: project and project.status == "active",
+            check=lambda request, project=None, **kwargs: (
+                project and project.status == "active"
+            ),
             extra_context={
                 "label": "Active Project",
                 "is_header": True,

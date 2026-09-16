@@ -5,7 +5,9 @@ from .views import ContextMenuDemoView
 
 
 def view(title):
-    return TemplateView.as_view(template_name="base.html", extra_context={"title": title})
+    return TemplateView.as_view(
+        template_name="base.html", extra_context={"title": title}
+    )
 
 
 urlpatterns = [
