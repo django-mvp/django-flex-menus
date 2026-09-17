@@ -65,7 +65,7 @@ An Item or Group is visible when its Check returns True AND its URL resolves suc
 _Avoid_: invisible, shown, displayed
 
 **Active**:
-An Item is active when its resolved URL matches the current request path, or any of its descendants' resolved URLs match. Only Items with a resolvable URL can be active.
+An Item is active when it points at the current request — by resolved view name if it has one, otherwise by resolved URL matching the request path — or any of its descendants are active. Only Items with a resolvable URL can be active.
 _Avoid_: selected, highlighted, current, focused
 
 ## Supporting Concepts

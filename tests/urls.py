@@ -3,9 +3,15 @@ URL configuration for django-flex-menus tests.
 """
 
 from django.contrib import admin
+from django.http import HttpResponse
 from django.urls import path
+
+
+def dummy_view(request, *args, **kwargs):
+    return HttpResponse("ok")
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    # Add test URLs here if needed for specific tests
+    path("products/<int:pk>/", dummy_view, name="product-detail"),
 ]

@@ -102,7 +102,7 @@ Media (CSS/JS) is automatically included before each menu.
 
 ### Active Item Highlighting
 
-Active items are automatically determined by comparing each item's URL to `request.path`. When an item's URL matches the current request path, its `selected` property is set to `True`.
+Active items are automatically determined. An item configured with `view_name` is matched against the request's resolved view name, so it stays active for query strings, trailing-slash variants, other objects served by the same view, and translated URLs. An item configured with a literal `url` or a callable has no resolved view to compare against, so it falls back to comparing its URL to `request.path`, ignoring any query string, fragment and trailing slash. When an item matches, its `selected` property is set to `True`.
 
 Renderers typically add CSS classes like `active` or `selected` to items where `item.selected` is `True`.
 
