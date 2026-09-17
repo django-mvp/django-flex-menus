@@ -681,6 +681,43 @@ class TestSelectionMatching:
         # Child should be selected since its URL matches
         assert processed_child.selected is True
 
+    def test_selection_ignores_query_string(self, request_factory):
+        """A URL item that carries a query string still matches the request path."""
+        request = request_factory.get("/orders/", {"page": "2"})
+
+        item = MenuItem(name="orders", label="Orders", url="/orders/?page=2")
+        processed = item.process(request)
+
+        assert processed.selected is True
+
+    def test_selection_ignores_trailing_slash_variant(self, request_factory):
+        """A URL item that differs from the request path only by a trailing slash still matches."""
+        request = request_factory.get("/orders/")
+
+        item = MenuItem(name="orders", label="Orders", url="/orders")
+        processed = item.process(request)
+
+        assert processed.selected is True
+
+    def test_selection_matches_view_name_regardless_of_kwargs(self, request_factory):
+        """
+        A view-name item matches any request resolved to that view, not only the
+        specific object whose kwargs happened to be passed to process().
+        """
+        from django.urls import resolve
+
+        # The item is processed generically for product 1 (e.g. building a sidebar).
+        item = MenuItem(name="product", label="Product", view_name="product-detail")
+
+        # The current request is for a different product served by the same view.
+        request = request_factory.get("/products/7/")
+        request.resolver_match = resolve("/products/7/")
+
+        processed = item.process(request, pk=1)
+
+        assert processed.url == "/products/1/"
+        assert processed.selected is True
+
 
 @pytest.mark.django_db
 class TestVisibilityLogic:

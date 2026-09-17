@@ -13,7 +13,7 @@ a link OR a container, not both.
 import logging
 from collections.abc import Callable
 from typing import Optional
-from urllib.parse import urlencode
+from urllib.parse import urlencode, urlsplit
 
 from anytree import Node, RenderTree, search
 from django.conf import settings
@@ -578,19 +578,49 @@ class MenuItem(Node):
 
         return None
 
+    @staticmethod
+    def _normalized_path(value: str) -> str:
+        """Strip query string/fragment and any single trailing slash for comparison."""
+        path = urlsplit(value).path
+        if len(path) > 1:
+            path = path.rstrip("/")
+        return path
+
     def match_url(self) -> bool:
         """
-        Check if the menu item's URL matches the request path.
+        Check if the menu item points at the current request.
+
+        Items with a ``view_name`` are matched against the request's resolved
+        view name, which identifies the destination Django resolved to rather
+        than a reconstructed path string. That handles a request whose path
+        carries kwargs for a different object, an i18n language prefix, or
+        query string/trailing-slash variation, all of which a raw path
+        comparison gets wrong.
+
+        Items configured with a literal ``url`` or a callable have no
+        resolved view to compare against, so they fall back to a normalized
+        path comparison (query string, fragment and trailing slash ignored).
 
         Returns:
-            True if the URL matches the request path, False otherwise.
+            True if the item matches the current request, False otherwise.
         """
-        url = getattr(self, "url", None)
-        if not url or not self.request:
+        if not self.request:
             self.selected = False
             return False
 
-        self.selected = url == self.request.path
+        resolver_match = getattr(self.request, "resolver_match", None)
+        if self.view_name and resolver_match is not None:
+            self.selected = getattr(resolver_match, "view_name", None) == self.view_name
+            return self.selected
+
+        url = getattr(self, "url", None)
+        if not url:
+            self.selected = False
+            return False
+
+        self.selected = self._normalized_path(url) == self._normalized_path(
+            self.request.path
+        )
         return self.selected
 
 
