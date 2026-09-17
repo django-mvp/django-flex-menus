@@ -31,6 +31,17 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
+    # mvp-shared is a git dependency pinned to a tag. Dependabot's Poetry
+    # updater raises `mvp-shared | unknown_error` on it and aborts the whole
+    # job ("run update_files", exit 1) — which silently stalls every OTHER
+    # Python update in this repo, security ones included. Support for
+    # tag-pinned Poetry git deps is recent (dependabot-core #13944) and still
+    # buggy, and mvp-shared's tag does not match the version it declares, so
+    # Dependabot cannot form a coherent bump. Ignoring it keeps the rest of
+    # the group flowing; bump the tag by hand when a shared release lands.
+    # Revisit if mvp-shared is ever published to an index.
+    ignore:
+      - dependency-name: "mvp-shared"
     groups:
       python-dependencies:
         patterns:
