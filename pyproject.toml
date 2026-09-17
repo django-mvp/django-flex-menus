@@ -89,10 +89,10 @@ extension = "html"
 
 # Lint and format are both ruff's: it replaces black (formatting), isort (the I
 # rules) and pyupgrade (the UP rules), so those three no longer appear here.
-# The family rule set lives in ruff-shared.toml, which is copied in rather than
+# The family rule set lives in ruff-base.toml, which is copied in rather than
 # referenced remotely — `extend` only accepts a local path.
 [tool.ruff]
-extend = "ruff-shared.toml"
+extend = "ruff-base.toml"
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["S101", "S105", "S106", "B017", "A001", "RUF059"]
