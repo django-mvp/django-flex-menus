@@ -9,6 +9,8 @@ Releases before v0.5.0 predate this file. Their notes are on the
 
 ## [Unreleased]
 
+## [v0.4.5] - 2026-09-22
+
 ### Fixed
 
 - **A menu item whose URL came from `reverse_lazy` no longer raises
