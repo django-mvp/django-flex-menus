@@ -9,6 +9,16 @@ Releases before v0.5.0 predate this file. Their notes are on the
 
 ## [Unreleased]
 
+### Fixed
+
+- **A menu item whose URL came from `reverse_lazy` no longer raises
+  `AttributeError: '__proxy__' object has no attribute 'decode'`** while working out whether
+  it points at the current request. `reverse_lazy` is how a menu declared at module level has
+  to resolve its URLs, because the URLconf is not loaded when the module is imported, so this
+  reached most menus built the ordinary way. Selection matching in v0.4.4 passed the item's URL
+  to `urlsplit`, which accepts only `str` or `bytes`; the lazy proxy is now resolved first.
+  Introduced in v0.4.4 by the change to match items by resolved view name.
+
 ## [v0.4.4] - 2026-09-22
 
 ### Changed

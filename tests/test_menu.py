@@ -718,6 +718,41 @@ class TestSelectionMatching:
         assert processed.url == "/products/1/"
         assert processed.selected is True
 
+    def test_selection_matches_a_lazy_url(self, request_factory):
+        """A menu declared at import time resolves its URLs with reverse_lazy.
+
+        A module-level menu cannot call ``reverse()`` — the URLconf is not
+        loaded yet — so ``reverse_lazy`` is the normal way to write one, and it
+        hands the item a lazy proxy rather than a ``str``.
+        """
+        from django.urls import reverse_lazy
+
+        request = request_factory.get("/products/7/")
+
+        item = MenuItem(
+            name="product",
+            label="Product",
+            url=reverse_lazy("product-detail", args=[7]),
+        )
+        processed = item.process(request)
+
+        assert processed.selected is True
+
+    def test_selection_rejects_a_non_matching_lazy_url(self, request_factory):
+        """The lazy URL is compared, not merely coerced and waved through."""
+        from django.urls import reverse_lazy
+
+        request = request_factory.get("/products/7/")
+
+        item = MenuItem(
+            name="product",
+            label="Product",
+            url=reverse_lazy("product-detail", args=[1]),
+        )
+        processed = item.process(request)
+
+        assert processed.selected is False
+
 
 @pytest.mark.django_db
 class TestVisibilityLogic:

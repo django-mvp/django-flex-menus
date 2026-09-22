@@ -20,6 +20,7 @@ from django.conf import settings
 from django.core.handlers.wsgi import WSGIRequest
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
+from django.utils.functional import Promise
 
 from .utils import get_required_url_params
 
@@ -579,9 +580,15 @@ class MenuItem(Node):
         return None
 
     @staticmethod
-    def _normalized_path(value: str) -> str:
-        """Strip query string/fragment and any single trailing slash for comparison."""
-        path = urlsplit(value).path
+    def _normalized_path(value: str | Promise) -> str:
+        """Strip query string/fragment and any single trailing slash for comparison.
+
+        A menu declared at module level resolves its URLs with reverse_lazy,
+        because the URLconf is not loaded when the module is imported. That
+        hands the item a lazy proxy, and urlsplit only accepts str or bytes,
+        so the proxy is resolved here before the split.
+        """
+        path = urlsplit(str(value)).path
         if len(path) > 1:
             path = path.rstrip("/")
         return path
