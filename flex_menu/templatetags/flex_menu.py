@@ -16,8 +16,14 @@ def process_menu(context, menu, **kwargs):
     Caches the processed menu on the request object to avoid re-processing
     if the same menu is rendered multiple times on the same page.
 
+    A context with no request yields no menu. Django renders the production
+    error page that way — django.views.defaults.server_error calls
+    template.render() with no context and no request — and a menu has no user
+    to decide visibility from in that case anyway. Raising there would bury the
+    error the page exists to report.
+
     Args:
-        context: Template context (must contain 'request').
+        context: Template context. Yields None when it carries no 'request'.
         menu: Menu name (str) or MenuItem instance.
         **kwargs: Context variables passed to check functions and URL resolution.
                  All kwargs are passed to check functions for visibility decisions.
@@ -25,10 +31,9 @@ def process_menu(context, menu, **kwargs):
                  For callable URLs, all kwargs are passed through.
 
     Returns:
-        Processed MenuItem instance or None if menu not found.
+        Processed MenuItem instance, or None if the menu is not found or the
+        context carries no request.
     """
-    request = context["request"]
-
     # Get menu instance
     if isinstance(menu, str):
         menu_name = menu
@@ -42,6 +47,12 @@ def process_menu(context, menu, **kwargs):
         menu_name = menu.name
 
     if not menu:
+        return None
+
+    # Resolved after the menu lookup, so a template naming a menu that does not
+    # exist still says so whether or not a request is present.
+    request = context.get("request")
+    if request is None:
         return None
 
     # Create cache key based on menu name and request ID
@@ -68,7 +79,8 @@ def render_menu(context, menu, renderer=None, include_media=True, **kwargs):
     JS after) unless include_media=False is specified.
 
     Args:
-        context: Template context (must contain 'request').
+        context: Template context. Renders nothing when it carries no
+                 'request' — see process_menu.
         menu: Menu name (str) or MenuItem instance.
         renderer: Renderer name (str). Required.
         include_media: Whether to include renderer's CSS/JS (default: True).

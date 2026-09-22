@@ -17,6 +17,13 @@ Releases before v0.5.0 predate this file. Their notes are on the
 
 ### Fixed
 
+- **`{% render_menu %}` and `{% process_menu %}` no longer raise `KeyError: 'request'` when
+  the template context carries no request.** They draw no menu instead. Django renders the
+  production error page in exactly that context — `django.views.defaults.server_error` calls
+  `template.render()` with no context and no request — so a project whose `500.html` drew a
+  menu raised inside its own error page and the original error was never reported. A template
+  naming a menu that does not exist still raises, request or no request, and visibility check
+  functions are never called without a request, so their signature is unchanged.
 - The README documented a `FLEX_MENU_LOG_URL_FAILURES` setting that nothing read. Logging of
   unresolvable destinations has always been controlled by `FLEX_MENUS["log_url_failures"]`,
   which is what the README now describes.

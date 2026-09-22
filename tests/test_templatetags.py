@@ -585,3 +585,83 @@ class TestTemplateTagIntegration:
         assert result.strip() == "", (
             "Item should be invisible when reverse() fails with extra kwargs"
         )
+
+
+@pytest.mark.django_db
+class TestTagsWithoutRequestInContext:
+    """Rendering a menu in a context that carries no request.
+
+    Django renders the production error page in exactly this context:
+    ``django.views.defaults.server_error`` calls ``template.render()`` with no
+    context and no request. A project whose error page draws a menu therefore
+    used to lose the real error behind ``KeyError: 'request'``. Reported at
+    django-mvp/django-mvp#367.
+    """
+
+    def test_process_menu_yields_nothing(self, sample_menu):
+        """process_menu resolves to None rather than raising."""
+        template = Template(
+            "{% load flex_menu %}"
+            "{% process_menu 'test_menu' as processed %}"
+            "[{{ processed.name }}]"
+        )
+
+        assert template.render(Context({})) == "[]"
+
+    def test_process_menu_still_yields_the_menu_with_a_request(
+        self, get_request, sample_menu
+    ):
+        """The guard skips the menu only when the request is the thing missing."""
+        template = Template(
+            "{% load flex_menu %}"
+            "{% process_menu 'test_menu' as processed %}"
+            "[{{ processed.name }}]"
+        )
+
+        assert template.render(Context({"request": get_request})) == "[test_menu]"
+
+    def test_render_menu_draws_nothing(self, sample_menu):
+        """render_menu returns an empty string rather than raising."""
+        from flex_menu.renderers import BaseRenderer
+
+        class NavRenderer(BaseRenderer):
+            template_map = {"depth_0": "test.html"}
+
+            def render(self, item, **kwargs):
+                return "<nav>Test Menu</nav>"
+
+        renderer = NavRenderer()
+        template = Template(
+            "{% load flex_menu %}{% render_menu 'test_menu' renderer=renderer %}"
+        )
+
+        assert template.render(Context({"renderer": renderer})) == ""
+
+    def test_render_menu_still_draws_the_menu_with_a_request(
+        self, get_request, sample_menu
+    ):
+        """Without this, dropping the menu entirely would pass the test above."""
+        from flex_menu.renderers import BaseRenderer
+
+        class NavRenderer(BaseRenderer):
+            template_map = {"depth_0": "test.html"}
+
+            def render(self, item, **kwargs):
+                return "<nav>Test Menu</nav>"
+
+        renderer = NavRenderer()
+        template = Template(
+            "{% load flex_menu %}{% render_menu 'test_menu' renderer=renderer %}"
+        )
+        context = Context({"request": get_request, "renderer": renderer})
+
+        assert "<nav>Test Menu</nav>" in template.render(context)
+
+    def test_an_unknown_menu_name_still_raises(self):
+        """A typo in a template is a bug whether or not a request is present."""
+        template = Template(
+            "{% load flex_menu %}{% process_menu 'nonexistent' as processed %}"
+        )
+
+        with pytest.raises(TemplateSyntaxError):
+            template.render(Context({}))
