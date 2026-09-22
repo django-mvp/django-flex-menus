@@ -9,6 +9,8 @@ Releases before v0.5.0 predate this file. Their notes are on the
 
 ## [Unreleased]
 
+## [v0.4.4] - 2026-09-22
+
 ### Changed
 
 - **Breaking:** the supported versions are now Python 3.12+ and Django 5.2 or 6.0. Python 3.11
