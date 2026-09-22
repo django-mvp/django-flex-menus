@@ -391,6 +391,28 @@ To handle gracefully:
 {% endif %}
 ```
 
+### Templates rendered without a request
+
+Both tags draw nothing when the template context carries no request. Neither raises.
+
+This matters most for error pages. Django renders `500.html` through
+`django.views.defaults.server_error`, which calls `template.render()` with no context and
+no request at all. A base template that draws a menu is therefore rendered without one
+every time the site returns a 500, and a tag that raised there would replace the error you
+need to read with its own.
+
+The same applies to `render_to_string()` called without a request, to a management command
+that renders a template, and to any other request-free render. Where a menu does matter on
+such a page, pass the request in yourself:
+
+```python
+render_to_string("report.html", {"request": request})
+```
+
+A template naming a menu that does not exist still raises, with or without a request.
+Visibility checks are never called without one, so a check function can keep assuming it
+has a request.
+
 ## Best Practices
 
 1. **Load once** - Load `{% load flex_menu %}` at the top of your template
