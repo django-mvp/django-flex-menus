@@ -9,6 +9,8 @@ Releases before v0.5.0 predate this file. Their notes are on the
 
 ## [Unreleased]
 
+## [v0.4.6] - 2026-09-23
+
 ### Fixed
 
 - **The package installs on Django 5.2 again.** A dependency update had rewritten the runtime
