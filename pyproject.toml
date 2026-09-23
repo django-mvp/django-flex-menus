@@ -134,3 +134,10 @@ DEP003 = ["flex_menu"]
 # documentation gaps. Anything genuinely public belongs in one of the modules
 # that is not listed here.
 exempt-paths = ["flex_menu/utils.py"]
+
+[tool.forge.conformance]
+# tests/test_packaging.py has no source module to mirror because its subject is
+# not Python: it reads pyproject.toml and README.md and checks that the Django
+# and Python versions they declare agree with each other. There is no
+# flex_menu/packaging.py and there should not be one.
+non-mirror-paths = ["tests/test_packaging.py"]
