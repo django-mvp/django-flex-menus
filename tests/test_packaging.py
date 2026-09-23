@@ -101,9 +101,12 @@ class TestDjangoSupportRange:
         self, readme, classified_django_versions
     ):
         """The README's Requirements section names the same Django versions as the classifiers."""
-        requirements_section = readme.split("## Requirements", 1)[1].split("\n## ", 1)[
-            0
-        ]
+        sections = readme.split("## Requirements", 1)
+        assert len(sections) == 2, (
+            "the README has no `## Requirements` section; it is one of the places the "
+            "supported versions are stated, so renaming it needs this test renamed too"
+        )
+        requirements_section = sections[1].split("\n## ", 1)[0]
         stated = {
             Version(match) for match in re.findall(r"\d+\.\d+", requirements_section)
         }
