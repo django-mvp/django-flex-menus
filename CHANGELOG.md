@@ -9,6 +9,26 @@ Releases before v0.5.0 predate this file. Their notes are on the
 
 ## [Unreleased]
 
+### Fixed
+
+- **The package installs on Django 5.2 again.** A dependency update had rewritten the runtime
+  requirement from `django>=5.2` to `django>=6.1.1`, so v0.4.4 and v0.4.5 could not be resolved
+  by any project pinned below Django 6.1.1. Projects that reach this package indirectly through
+  `django-mvp` were affected the same way, with no change of theirs asking for it. Nothing in
+  the package uses a Django 6 API and the test matrix has run 5.2 and 6.0 throughout, so the
+  lower bound is back to `django>=5.2` — what
+  [ADR 0001](docs/adr/0001-supported-python-and-django-versions.md), the classifiers and the
+  README's Requirements section have said all along.
+
+### Changed
+
+- Automated dependency updates no longer rewrite the runtime requirements on `django` and
+  `anytree`. For a library those constraints state which versions are supported, so widening or
+  narrowing them is a decision recorded in ADR 0001 rather than a side effect of whichever
+  release was newest that week. Development dependencies keep updating weekly as before. The
+  test suite now also checks that the declared range, the classifiers and the README agree, so
+  the next attempt to raise the floor fails in CI.
+
 ## [v0.4.5] - 2026-09-22
 
 ### Fixed

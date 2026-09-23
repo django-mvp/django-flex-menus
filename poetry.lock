@@ -988,28 +988,28 @@ develop = false
 docutils = "*"
 jinja2 = "*"
 markdown = "*"
-myst-parser = ">=4.0"
-sphinx = ">=8.1"
-sphinx-autobuild = ">=2024.10"
+myst-parser = ">=5.1.0"
+sphinx = ">=9.1.0"
+sphinx-autobuild = ">=2025.8.25"
 sphinx-autodoc2 = ">=0.5"
 sphinx-book-theme = {version = ">1.1", optional = true}
 sphinx-comments = ">=0.0.3"
 sphinx-copybutton = ">=0.5"
-sphinx-design = ">=0.6"
+sphinx-design = ">=0.7.0"
 sphinx-exec-code = ">=0.16,<0.17"
-sphinxcontrib-bibtex = ">=2.6.3,<3.0.0"
-sphinxext-opengraph = ">=0.9"
-typer = ">=0.12.0"
+sphinxcontrib-bibtex = ">=2.7.0,<3.0.0"
+sphinxext-opengraph = ">=0.13.0"
+typer = ">=0.27.2"
 
 [package.extras]
-pydata-sphinx-theme = ["pydata-sphinx-theme (>=0.16.1)"]
+pydata-sphinx-theme = ["pydata-sphinx-theme (>=0.21.0)"]
 sphinx-book-theme = ["sphinx-book-theme (>1.1)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/FAIR-DM/fairdm-docs"
 reference = "HEAD"
-resolved_reference = "7427c71a1428dcc1dc6b2737cf3d936d74a06b4b"
+resolved_reference = "7ba254c4b822f539713db5ff1828bb401d07d629"
 
 [[package]]
 name = "faker"
@@ -2742,21 +2742,21 @@ files = [
 
 [[package]]
 name = "sphinx"
-version = "9.0.4"
+version = "9.1.0"
 description = "Python documentation generator"
 optional = false
-python-versions = ">=3.11"
+python-versions = ">=3.12"
 groups = ["docs"]
 files = [
-    {file = "sphinx-9.0.4-py3-none-any.whl", hash = "sha256:5bebc595a5e943ea248b99c13814c1c5e10b3ece718976824ffa7959ff95fffb"},
-    {file = "sphinx-9.0.4.tar.gz", hash = "sha256:594ef59d042972abbc581d8baa577404abe4e6c3b04ef61bd7fc2acbd51f3fa3"},
+    {file = "sphinx-9.1.0-py3-none-any.whl", hash = "sha256:c84fdd4e782504495fe4f2c0b3413d6c2bf388589bb352d439b2a3bb99991978"},
+    {file = "sphinx-9.1.0.tar.gz", hash = "sha256:7741722357dd75f8190766926071fed3bdc211c74dd2d7d4df5404da95930ddb"},
 ]
 
 [package.dependencies]
 alabaster = ">=0.7.14"
 babel = ">=2.13"
 colorama = {version = ">=0.4.6", markers = "sys_platform == \"win32\""}
-docutils = ">=0.20,<0.23"
+docutils = ">=0.21,<0.23"
 imagesize = ">=1.3"
 Jinja2 = ">=3.1"
 packaging = ">=23.0"
@@ -3212,19 +3212,19 @@ test = ["argcomplete (>=3.0.3)", "mypy (>=1.17.0,<1.19)", "pre-commit", "pytest 
 
 [[package]]
 name = "typer"
-version = "0.25.1"
+version = "0.27.2"
 description = "Typer, build great CLIs. Easy to code. Based on Python type hints."
 optional = false
 python-versions = ">=3.10"
 groups = ["docs"]
 files = [
-    {file = "typer-0.25.1-py3-none-any.whl", hash = "sha256:75caa44ed46a03fb2dab8808753ffacdbfea88495e74c85a28c5eefcf5f39c89"},
-    {file = "typer-0.25.1.tar.gz", hash = "sha256:9616eb8853a09ffeabab1698952f33c6f29ffdbceb4eaeecf571880e8d7664cc"},
+    {file = "typer-0.27.2-py3-none-any.whl", hash = "sha256:b3a5fc4342d5fc8fda8fc3010b1cf117e9249aab7fae800c2eff62fd3842d97d"},
+    {file = "typer-0.27.2.tar.gz", hash = "sha256:269b7eb9d3c202ca84b4bc9618cb04ebb43d3d4d1e567e4c768607232c05f945"},
 ]
 
 [package.dependencies]
 annotated-doc = ">=0.0.2"
-click = ">=8.2.1"
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
 rich = ">=13.8.0"
 shellingham = ">=1.3.0"
 
@@ -3656,4 +3656,4 @@ dev = ["pytest", "setuptools"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "3f4db6df3e6d912c489058fe5fb460e46141e04295f4dd888c68b52e6a4e84b3"
+content-hash = "42c0f6fb5763187b9fb24a01872c7d620abcb61f15d53199314e5e29aa2383f3"

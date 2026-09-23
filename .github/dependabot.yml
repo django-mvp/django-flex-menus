@@ -42,6 +42,18 @@ updates:
     # Revisit if mvp-shared is ever published to an index.
     ignore:
       - dependency-name: "mvp-shared"
+      # Runtime dependencies of a library are a statement about the versions it
+      # supports, not a record of what is installed here. Dependabot rewrites
+      # them to the newest release, which reads as "drop support for everything
+      # older" — it raised the Django floor to 6.1.1 in #51 and made the package
+      # uninstallable beside Django 5.2, a version the test matrix still runs.
+      # Every name in [project].dependencies therefore belongs on this list, and
+      # a new runtime dependency is added here when it is added there. Bumping a
+      # supported range stays a deliberate change to
+      # docs/adr/0001-supported-python-and-django-versions.md. Development
+      # dependencies are unaffected and keep updating on the weekly cycle.
+      - dependency-name: "django"
+      - dependency-name: "anytree"
     groups:
       python-dependencies:
         patterns:
