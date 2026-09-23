@@ -8,9 +8,12 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
-# Only actively supported Django releases: 5.2 LTS and the current stable.
-# Widening or narrowing this range is a constitution-level change (Article XII).
-dependencies = ["django>=6.1.1", "anytree>2"]
+# The lower bound is the oldest Django release this package supports, not the newest one
+# available: raising it drops every consumer below it. It is recorded in
+# docs/adr/0001-supported-python-and-django-versions.md and must keep agreeing with the
+# classifiers, the README and the test matrix. Changing it is a deliberate decision
+# (Article XII), never the by-product of a dependency update.
+dependencies = ["django>=5.2", "anytree>2"]
 keywords = ["django", "menu", "navigation", "navbar", "sidebar", "anytree"]
 classifiers = [
     "Development Status :: 4 - Beta",
@@ -131,3 +134,10 @@ DEP003 = ["flex_menu"]
 # documentation gaps. Anything genuinely public belongs in one of the modules
 # that is not listed here.
 exempt-paths = ["flex_menu/utils.py"]
+
+[tool.forge.conformance]
+# tests/test_packaging.py has no source module to mirror because its subject is
+# not Python: it reads pyproject.toml and README.md and checks that the Django
+# and Python versions they declare agree with each other. There is no
+# flex_menu/packaging.py and there should not be one.
+non-mirror-paths = ["tests/test_packaging.py"]
