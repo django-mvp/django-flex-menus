@@ -21,6 +21,7 @@ classifiers = [
     "Framework :: Django",
     "Framework :: Django :: 5.2",
     "Framework :: Django :: 6.0",
+    "Framework :: Django :: 6.1",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
@@ -35,26 +36,32 @@ Repository = "https://github.com/django-mvp/django-flex-menus"
 Documentation = "https://django-mvp.github.io/django-flex-menus/"
 Issues = "https://github.com/django-mvp/django-flex-menus/issues"
 
-[tool.poetry]
-packages = [{ include = "flex_menu" }]
-requires-poetry = '>=2.0,<3.0'
+[tool.hatch.build.targets.wheel]
+packages = ["flex_menu"]
 
-[tool.poetry.group.dev.dependencies]
-# Family toolchain bundle; the pin tag is the family-standard version. Ships
-# ruff, mypy, deptry, pre-commit, pytest, pytest-django, coverage, django-stubs.
-mvp-shared = { git = "https://github.com/django-mvp/shared.git", tag = "v0.4.1", extras = [
-    "dev",
-    "test",
-] }
+# Hatchling's default source distribution is the whole working tree: tests, the
+# example project, documentation, CI configuration and the repository's own
+# records. Listing what ships keeps it to the package, the readme and the
+# licence. Hatchling adds .gitignore itself, so that a build from the source
+# distribution leaves out what the repository does.
+[tool.hatch.build.targets.sdist]
+include = ["flex_menu", "README.md", "LICENSE"]
 
-[tool.poetry.group.docs.dependencies]
-fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs", extras = [
-    "sphinx_book_theme",
-] }
+[dependency-groups]
+# Shared toolchain bundle from django-mvp/shared, pinned to a release tag so
+# every package in this organisation runs one version of each tool. Ships ruff,
+# mypy, deptry, pre-commit, pytest, pytest-django, coverage and django-stubs.
+dev = ["mvp-shared[dev,test]"]
+# Installed only where the documentation is built: `uv sync --group docs`.
+docs = ["fairdm-docs[sphinx_book_theme]"]
+
+[tool.uv.sources]
+mvp-shared = { git = "https://github.com/django-mvp/shared.git", tag = "v0.6.0" }
+fairdm-docs = { git = "https://github.com/FAIR-DM/fairdm-docs" }
 
 [build-system]
-requires = ['poetry-core (>=2.0,<3.0)']
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "tests.settings"

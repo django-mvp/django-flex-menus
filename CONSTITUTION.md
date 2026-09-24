@@ -164,7 +164,7 @@ minor release with a warning before it goes. Anything not in that list is intern
 in a patch.
 
 ### Article XIII — Stack norms
-Poetry-managed, with the development toolchain coming from the shared `mvp-shared` bundle rather
+uv-managed with a hatchling build backend, and with the development toolchain coming from the shared `mvp-shared` bundle rather
 than per-repo pins. CI calls the shared reusable workflows, pinned to a tag and never `@main`.
 Documentation is Sphinx and must build clean.
 

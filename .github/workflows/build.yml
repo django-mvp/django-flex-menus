@@ -7,7 +7,7 @@ on:
     paths:
       - 'flex_menu/**'
       - 'pyproject.toml'
-      - 'poetry.lock'
+      - 'uv.lock'
       - '.pre-commit-config.yaml'
       - 'ruff-shared.toml'
       - '.github/workflows/build.yml'
@@ -19,7 +19,7 @@ on:
 
 jobs:
   call-build:
-    uses: django-mvp/shared/.github/workflows/build.yml@v0.4.1
+    uses: django-mvp/shared/.github/workflows/build.yml@v0.6.0
     with:
       source-dir: flex_menu
     secrets: inherit

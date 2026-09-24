@@ -9,6 +9,17 @@ Releases before v0.5.0 predate this file. Their notes are on the
 
 ## [Unreleased]
 
+### Added
+
+- Django 6.1 is supported, and tested on every change alongside 5.2 and 6.0.
+
+### Changed
+
+- The package is built with hatchling instead of poetry-core, and developed with uv instead of
+  Poetry. The wheel contains the same files as before. The source distribution does too, plus the
+  repository's `.gitignore`, which hatchling includes so that a build from it leaves out the same
+  files.
+
 ## [v0.4.6] - 2026-09-23
 
 ### Fixed

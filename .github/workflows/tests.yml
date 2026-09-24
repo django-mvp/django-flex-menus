@@ -8,7 +8,7 @@ on:
       - 'flex_menu/**'
       - 'tests/**'
       - 'pyproject.toml'
-      - 'poetry.lock'
+      - 'uv.lock'
       - '.github/workflows/tests.yml'
   # No paths filter on pull_request: these checks are ruleset-required, and a
   # path-filtered required check never reports on out-of-scope PRs, blocking merge.
@@ -18,12 +18,7 @@ on:
 
 jobs:
   call-tests:
-    uses: django-mvp/shared/.github/workflows/tests.yml@v0.4.1
+    uses: django-mvp/shared/.github/workflows/tests.yml@v0.6.0
     with:
       coverage-package: flex_menu
-      django-versions: '["5.2", "6.0"]'
-      # Test and lint tooling lives in the single (non-optional) dev group via
-      # the mvp-shared bundle, so the default `--with test` would fail. Empty
-      # args install main + dev + docs, which covers pytest.
-      poetry-install-args: ''
     secrets: inherit

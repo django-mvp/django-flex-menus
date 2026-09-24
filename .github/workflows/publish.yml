@@ -33,15 +33,17 @@ jobs:
       - name: Check out
         uses: actions/checkout@v7
 
-      - name: Set up Poetry env
-        uses: django-mvp/shared/.github/actions/setup-poetry@v0.4.1
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
         with:
           python-version: '3.13'
 
+      # --check fails when uv.lock is out of date with pyproject.toml, so a
+      # release never ships from a tree whose lockfile disagrees with it.
       - name: Build package
         run: |
-          poetry check --lock
-          poetry build
+          uv lock --check
+          uv build
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

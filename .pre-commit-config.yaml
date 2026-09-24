@@ -1,21 +1,17 @@
-# Family-standard pre-commit configuration for django-mvp repositories.
+# Shared pre-commit configuration, copied in from django-mvp/shared.
 #
-# Copy to the repo root as `.pre-commit-config.yaml` and replace
-# flex_menu with the repo's package directory (e.g. `licensing`).
-#
-# The Python tools (ruff, mypy, deptry) run as *local* hooks inside the Poetry
-# env, so their versions come from the mvp-shared[dev] bundle — one version
-# source for the whole family, instead of per-repo `rev:` pins that drift under
-# autoupdate. It also means `poetry run <tool>` behaves identically to the hook.
+# The Python tools (ruff, mypy, deptry) run as *local* hooks through `uv run`,
+# so their versions come from the mvp-shared[dev] bundle — one version source
+# for every repository, instead of per-repo `rev:` pins that drift under
+# autoupdate. `uv run <tool>` at a terminal behaves identically to the hook.
 #
 # black and pyupgrade are deliberately absent: `ruff format` is a drop-in black
 # replacement, and ruff's UP rules cover pyupgrade (enable them in the repo's
 # `[tool.ruff.lint]` select list).
 
-# LOCAL DIVERGENCE from templates/pre-commit-config.yaml: the family template
+# LOCAL DIVERGENCE from templates/pre-commit-config.yaml: the shared template
 # also excludes `^tests/`. This repo lints and formats its tests, so that leg is
-# dropped here — keep it dropped when re-copying the template on a standards
-# bump. The tests/* carve-outs in pyproject.toml's [tool.ruff.lint.per-file-ignores]
+# dropped here — keep it dropped when re-copying the template. The tests/* carve-outs in pyproject.toml's [tool.ruff.lint.per-file-ignores]
 # only do anything while tests/ is actually inspected.
 exclude: "^docs/|/migrations/"
 default_stages: [pre-commit]
@@ -29,31 +25,32 @@ repos:
       - id: end-of-file-fixer
       - id: check-yaml
 
-  - repo: https://github.com/python-poetry/poetry
-    rev: '2.3.4'
+  # uv-lock rewrites uv.lock when pyproject.toml has moved on. The build
+  # workflow's `uv sync --locked` fails on a stale lockfile, so running this
+  # here means the lockfile is already correct by the time CI looks at it.
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.12.18
     hooks:
-      - id: poetry-check
-      - id: poetry-lock
-        stages: [manual]  # Only run manually, not in CI
+      - id: uv-lock
 
-  # Local hooks that use the Poetry environment
+  # Local hooks that use the project environment
   - repo: local
     hooks:
       - id: ruff
         name: ruff (lint)
-        entry: poetry run ruff check --fix
+        entry: uv run ruff check --fix
         language: system
         types: [python]
         require_serial: true
       - id: ruff-format
         name: ruff (format)
-        entry: poetry run ruff format
+        entry: uv run ruff format
         language: system
         types: [python]
         require_serial: true
       - id: mypy
         name: mypy
-        entry: poetry run mypy
+        entry: uv run mypy
         language: system
         # Without require_serial, pre-commit splits the file list into parallel
         # batches, and concurrent mypy processes race on the shared .mypy_cache —
@@ -64,14 +61,14 @@ repos:
         files: ^flex_menu/
       - id: deptry
         name: deptry
-        entry: poetry run deptry .
+        entry: uv run deptry .
         language: system
         pass_filenames: false
         always_run: true
 
-# pre-commit.ci runs only the env-independent hooks; the local Poetry-env hooks
+# pre-commit.ci runs only the env-independent hooks; the local project-env hooks
 # run in each repo's own CI (the shared build workflow's Code Quality job).
 ci:
   autoupdate_schedule: monthly
-  skip: [poetry-lock, ruff, ruff-format, mypy, deptry]
+  skip: [ruff, ruff-format, mypy, deptry]
   submodules: false

@@ -6,7 +6,7 @@
 
 The package supports Python 3.12 and above, and Django 5.2 or later.
 
-The tested matrix is Python 3.12 and 3.13 against Django 5.2 and 6.0 — the same matrix every
+The tested matrix is Python 3.12 and 3.13 against Django 5.2, 6.0 and 6.1 — the same matrix every
 package in this family runs, so that a toolchain change is tested once rather than per repo.
 
 `requires-python`, the `django` constraint in `pyproject.toml`, the classifiers, and the README's
@@ -34,10 +34,10 @@ and buys a consumer nothing they should be relying on.
 Raising the Python floor to 3.12 costs nothing here: nobody could have been installing this
 package on 3.11 alongside its own tooling.
 
-The runtime constraint is deliberately `>=5.2` with no ceiling, while the matrix stops at 6.0.
-Django 6.1 is released and supported, so a consumer on it can install the package — it is simply
-not one of the combinations tested here. Closing that gap means moving the family matrix, which
-belongs in the shared workflow rather than in this repository.
+The runtime constraint is deliberately `>=5.2` with no ceiling, so a consumer on a Django release
+newer than the matrix can still install the package. It is simply not one of the combinations
+tested here. Widening the matrix means moving the family matrix, which belongs in the shared
+workflow rather than in this repository.
 
 ## Revisit if
 

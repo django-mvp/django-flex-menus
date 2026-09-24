@@ -17,8 +17,8 @@
 # block in a compose-only repo never produces anything.
 version: 2
 updates:
-  # Python dependencies (Poetry)
-  - package-ecosystem: "pip"
+  # Python dependencies (uv.lock)
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -31,15 +31,10 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-    # mvp-shared is a git dependency pinned to a tag. Dependabot's Poetry
-    # updater raises `mvp-shared | unknown_error` on it and aborts the whole
-    # job ("run update_files", exit 1) — which silently stalls every OTHER
-    # Python update in this repo, security ones included. Support for
-    # tag-pinned Poetry git deps is recent (dependabot-core #13944) and still
-    # buggy, and mvp-shared's tag does not match the version it declares, so
-    # Dependabot cannot form a coherent bump. Ignoring it keeps the rest of
-    # the group flowing; bump the tag by hand when a shared release lands.
-    # Revisit if mvp-shared is ever published to an index.
+    # mvp-shared is a git dependency pinned to a tag, and the same tag is
+    # pinned again in every workflow that calls django-mvp/shared. The two have
+    # to move together, which a Dependabot bump to pyproject.toml and uv.lock
+    # alone cannot do, so the tag is bumped by hand when a shared release lands.
     ignore:
       - dependency-name: "mvp-shared"
       # Runtime dependencies of a library are a statement about the versions it
