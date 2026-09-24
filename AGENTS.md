@@ -8,13 +8,13 @@ decides whether it is visible for the current request. `CONTEXT.md` defines thes
 
 ## Stack & commands
 
-- **Stack:** Python 3.12+ / Django 5.2 and 6.0, Poetry-managed, built on [anytree](https://github.com/c0fec0de/anytree)
-- **Install:** `poetry install`
-- **Test:** `poetry run pytest`
-- **Lint:** `poetry run pre-commit run --all-files` (ruff lint + format, mypy, deptry)
-- **Type-check:** `poetry run mypy`
-- **Build:** `poetry build`
-- **Docs:** `poetry run sphinx-build -E -b html docs docs/_build`
+- **Stack:** Python 3.12+ / Django 5.2, 6.0 and 6.1, uv-managed (hatchling build backend), built on [anytree](https://github.com/c0fec0de/anytree)
+- **Install:** `uv sync`
+- **Test:** `uv run pytest`
+- **Lint:** `uv run pre-commit run --all-files` (ruff lint + format, mypy, deptry)
+- **Type-check:** `uv run mypy`
+- **Build:** `uv build`
+- **Docs:** `uv run --group docs sphinx-build -E -b html docs docs/_build`
 
 Lint is the pre-commit run, not a bare `ruff check .`: the hook config excludes `docs/`,
 migrations and `tests/`, and a raw invocation reports findings in paths the gate does not cover.

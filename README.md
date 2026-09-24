@@ -39,7 +39,7 @@ require the library to know what your HTML looks like belongs in a renderer inst
 ## Requirements
 
 - Python 3.12+
-- Django 5.2 or 6.0
+- Django 5.2, 6.0 or 6.1
 
 ## Installation
 

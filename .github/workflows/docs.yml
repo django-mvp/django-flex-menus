@@ -18,5 +18,7 @@ on:
 
 jobs:
   call-docs:
-    uses: django-mvp/shared/.github/workflows/docs.yml@v0.4.1
+    uses: django-mvp/shared/.github/workflows/docs.yml@v0.6.0
+    with:
+      uv-sync-args: '--group docs'
     secrets: inherit
