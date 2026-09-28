@@ -1,3 +1,5 @@
+"""URL routes for the example project."""
+
 from django.urls import path
 from django.views.generic import TemplateView
 
@@ -5,6 +7,7 @@ from .views import ContextMenuDemoView
 
 
 def view(title):
+    """Build a TemplateView rendering base.html with the given page title."""
     return TemplateView.as_view(
         template_name="base.html", extra_context={"title": title}
     )

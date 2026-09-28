@@ -1,19 +1,10 @@
-"""
-Example menu definitions using the unified MenuItem class.
-
-This demonstrates how a single menu structure can be rendered
-multiple ways using different renderers.
-"""
+"""Example menu definitions demonstrating one structure rendered multiple ways."""
 
 from django.urls import reverse
 
 from flex_menu import Menu, MenuItem
 
-# ============================================================================
-# Main Navigation Menu
-# ============================================================================
-# Define menu structure ONCE
-# This same structure will be rendered as both navbar and sidebar
+# This same structure is rendered as both navbar and sidebar (see example/renderers.py).
 main_navigation = MenuItem(
     "main_navigation",
     extra_context={"label": "Main Navigation"},
@@ -78,11 +69,6 @@ main_navigation = MenuItem(
 )
 
 
-# ============================================================================
-# Context-Specific Menus for Database Objects
-# ============================================================================
-
-
 def check_project_status(request, project=None, status=None, **kwargs):
     """Check if project has specific status."""
     if not project:
@@ -104,7 +90,6 @@ def check_project_editable(request, project=None, **kwargs):
     return project.status != "archived"
 
 
-# Project Actions Menu - Changes based on project state
 # Usage: {% render_menu 'project_actions' project=project slug=project.slug renderer='sidebar' %}
 project_actions = Menu(
     name="project_actions",
@@ -155,7 +140,6 @@ project_actions = Menu(
 )
 
 
-# Project Status Menu - Dynamic sections based on project state
 # Usage: {% render_menu 'project_status_menu' project=project %}
 project_status_menu = Menu(
     name="project_status_menu",

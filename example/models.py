@@ -1,6 +1,4 @@
-"""
-Example models for demonstrating context-specific menus.
-"""
+"""Example models for demonstrating context-specific menus."""
 
 from django.db import models
 
@@ -23,6 +21,7 @@ class Project(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
+        """Show the project's name."""
         return self.name
 
     class Meta:

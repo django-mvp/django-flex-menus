@@ -1,27 +1,24 @@
+"""Invoke tasks for testing, building docs, and running CI checks locally."""
+
 from invoke import task
 
 
 @task
 def test(c):
-    """
-    Run the test suite
-    """
+    """Run the test suite."""
     print("🚀 Testing code: Running pytest")
     c.run("uv run pytest --cov=flex_menu --cov-report=html --cov-report=term")
 
 
 @task
 def docs(c):
-    """
-    Build the documentation and open it in the browser
-    """
+    """Build the documentation and open it in the browser."""
     c.run("uv run --group docs sphinx-build -E -b html docs docs/_build")
 
 
 @task
 def check(c):
-    """
-    Run every gate CI runs, in the same order, before opening a pull request.
+    """Run every gate CI runs, in the same order, before opening a pull request.
 
     1. pre-commit: ruff lint, ruff format, mypy, deptry, lock file refresh
     2. Lock file consistency
@@ -48,9 +45,7 @@ def check(c):
 
 @task
 def live_docs(c):
-    """
-    Build the documentation and serve it with live reload
-    """
+    """Build the documentation and serve it with live reload."""
     c.run(
         "uv run --group docs sphinx-autobuild -b html --host 0.0.0.0 --port 9000 --watch . -c . . _build/html"
     )
