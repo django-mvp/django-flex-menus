@@ -8,11 +8,9 @@ authors = [
 license = "MIT"
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
-# The lower bound is the oldest Django release this package supports, not the newest one
-# available: raising it drops every consumer below it. It is recorded in
-# docs/adr/0001-supported-python-and-django-versions.md and must keep agreeing with the
-# classifiers, the README and the test matrix. Changing it is a deliberate decision
-# (Article XII), never the by-product of a dependency update.
+# The Django floor is the oldest supported release, so raising it drops consumers. It
+# agrees with the classifiers, the README, the test matrix and docs/adr/0001; change it
+# only as a decision under CONSTITUTION.md Article XI.
 dependencies = ["django>=5.2", "anytree>2"]
 keywords = ["django", "menu", "navigation", "navbar", "sidebar", "anytree"]
 classifiers = [
@@ -39,18 +37,14 @@ Issues = "https://github.com/django-mvp/django-flex-menus/issues"
 [tool.hatch.build.targets.wheel]
 packages = ["flex_menu"]
 
-# Hatchling's default source distribution is the whole working tree: tests, the
-# example project, documentation, CI configuration and the repository's own
-# records. Listing what ships keeps it to the package, the readme and the
-# licence. Hatchling adds .gitignore itself, so that a build from the source
-# distribution leaves out what the repository does.
+# Hatchling's default sdist is the whole working tree. Ship only the package, the
+# readme and the licence.
 [tool.hatch.build.targets.sdist]
 include = ["flex_menu", "README.md", "LICENSE"]
 
 [dependency-groups]
-# Shared toolchain bundle from django-mvp/shared, pinned to a release tag so
-# every package in this organisation runs one version of each tool. Ships ruff,
-# mypy, deptry, pre-commit, pytest, pytest-django, coverage and django-stubs.
+# Toolchain bundle from django-mvp/shared, pinned to a release tag so every
+# package in the organisation runs the same version of each tool.
 dev = ["mvp-shared[dev,test]"]
 # Installed only where the documentation is built: `uv sync --group docs`.
 docs = ["fairdm-docs[sphinx_book_theme]"]
@@ -97,10 +91,8 @@ include = "H006,H013,H020,H021,H023,H025,H030,H031"
 ignore = "H017"
 extension = "html"
 
-# Lint and format are both ruff's: it replaces black (formatting), isort (the I
-# rules) and pyupgrade (the UP rules), so those three no longer appear here.
-# The family rule set lives in ruff-base.toml, which is copied in rather than
-# referenced remotely — `extend` only accepts a local path.
+# The shared rule set lives in ruff-base.toml, copied in because `extend` only
+# accepts a local path.
 [tool.ruff]
 extend = "ruff-base.toml"
 
@@ -135,16 +127,11 @@ extend_exclude = ["tasks.py", "tests/", "example/", "docs/"]
 DEP003 = ["flex_menu"]
 
 [tool.forge.docs]
-# utils.py holds URL-resolver introspection that menu.py calls and nothing else
-# does: it is exported from no __init__, named in no document, and absent from
-# the public surface listed in CONSTITUTION.md Article XII. Its names are not
-# documentation gaps. Anything genuinely public belongs in one of the modules
-# that is not listed here.
+# utils.py is internal URL-resolver introspection used only by menu.py, outside
+# the public surface listed in CONSTITUTION.md Article XI.
 exempt-paths = ["flex_menu/utils.py"]
 
 [tool.forge.conformance]
-# tests/test_packaging.py has no source module to mirror because its subject is
-# not Python: it reads pyproject.toml and README.md and checks that the Django
-# and Python versions they declare agree with each other. There is no
-# flex_menu/packaging.py and there should not be one.
+# test_packaging.py checks that pyproject.toml and README.md declare the same
+# Python and Django versions, so it has no source module to mirror.
 non-mirror-paths = ["tests/test_packaging.py"]

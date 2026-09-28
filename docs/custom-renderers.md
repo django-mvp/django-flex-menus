@@ -249,7 +249,7 @@ Add to `settings.py`:
 FLEX_MENUS = {
     "renderers": {
         "tailwind": "myapp.renderers.TailwindRenderer",
-        "bootstrap5": "flex_menu.renderers.Bootstrap5NavbarRenderer",
+        "bootstrap5": "myproject.renderers.Bootstrap5NavbarRenderer",
     },
 }
 ```

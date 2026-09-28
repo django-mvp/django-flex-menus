@@ -59,8 +59,8 @@ main_nav = Menu(
 ```python
 FLEX_MENUS = {
     "renderers": {
-        "bootstrap5": "flex_menu.renderers.Bootstrap5NavbarRenderer",
-        "sidebar": "flex_menu.renderers.Bootstrap5SidebarRenderer",
+        "bootstrap5": "myproject.renderers.Bootstrap5NavbarRenderer",
+        "sidebar": "myproject.renderers.Bootstrap5SidebarRenderer",
     },
 }
 ```
@@ -94,6 +94,14 @@ template-usage
 visibility-checks
 custom-renderers
 api/index
+```
+
+```{toctree}
+:caption: Contributing
+:maxdepth: 1
+
+contributing/standards/testing
+contributing/standards/code-documentation
 ```
 
 ## License
