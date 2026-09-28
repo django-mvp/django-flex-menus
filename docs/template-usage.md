@@ -366,9 +366,9 @@ Configure available renderers in `settings.py`:
 ```python
 FLEX_MENUS = {
     "renderers": {
-        "bootstrap5": "flex_menu.renderers.Bootstrap5NavbarRenderer",
-        "sidebar": "flex_menu.renderers.Bootstrap5SidebarRenderer",
-        "simple": "flex_menu.renderers.SimpleHTMLRenderer",
+        "bootstrap5": "myproject.renderers.Bootstrap5NavbarRenderer",
+        "sidebar": "myproject.renderers.Bootstrap5SidebarRenderer",
+        "simple": "myproject.renderers.SimpleHTMLRenderer",
     },
 }
 ```

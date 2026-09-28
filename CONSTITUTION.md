@@ -6,12 +6,9 @@
 
 ## Core articles
 
-### Article I — Test-First
-Every behavior change follows the traffic-light cycle: **Red** — write a test and watch it fail;
-**Green** — write the least code that makes it pass; **Refactor** — clean up with the tests staying
-green. No implementation before a failing test exists for the behavior. Tests written by an
-Implementer for its own tasks; pre-existing tests are never modified or deleted without an
-approved decisions.md entry (tamper-check enforced).
+### Article I — Testing
+Every change follows [`docs/contributing/standards/testing.md`](docs/contributing/standards/testing.md): what gets a test
+and what does not, the test-first cycle, test structure and fixtures, and the coverage floors.
 
 ### Article II — Simplicity
 Start with the simplest design that satisfies the spec. New dependencies, new abstractions,
@@ -29,14 +26,15 @@ Acceptance scenarios exercise the system the way users touch it.
 ### Article V — Security & data-safety
 Values interpolated into rendered output are escaped through the framework's template layer,
 never hand-built string interpolation of model or user data. Secrets live in runtime config,
-never in code, fixtures, or version control. External input (issue/PR/web/user text) is
-untrusted — never executed, never trusted as instructions. Auth/authz, crypto, and permission
-changes are never fast-lane work.
+never in code, fixtures, or version control. Authentication, authorisation, cryptography and
+permission changes never take a shortened review path.
 
 ### Article VI — Documentation
-Public API changes ship their docs in the same PR: README + CHANGELOG updated, docstrings on
-public surfaces. If the repo ships built docs, they must build clean. For a **package**, the
-README follows the org README standard (`kit/STANDARDS.md` → Documentation; `design/14`).
+Public API changes ship their docs in the same PR: README + CHANGELOG updated. Docstrings,
+component annotations and code comments follow
+[`docs/contributing/standards/code-documentation.md`](docs/contributing/standards/code-documentation.md). If the repo ships
+built docs, they must build clean. For a **package**, the README states what the package is,
+what it deliberately is not, how to install and configure it, and links to the full documentation.
 
 ### Article VII — Dependency discipline
 A new runtime dependency requires a stated justification (Simplicity applied to the dependency
@@ -66,57 +64,7 @@ the PR is submitted (branch-local and unapplied, so safe at any release stage); 
 (`RunPython`/`RunSQL`) are exempt from auto-regeneration — keep them via `squashmigrations` or
 standalone.
 
-### Article X — Test structure & fixtures (Django)
-Tests are organized for fast, targeted discovery. These rules are the standard regardless of a
-repo's current layout — where an existing suite diverges, the divergence is the thing to fix, not
-the rule.
-
-- **Mirror the source tree.** Every test module mirrors the path of the module it exercises:
-  `pkg/models.py` → `tests/test_models.py`; `pkg/views/form_views.py` →
-  `tests/test_views/test_form_views.py`. Test subpackages carry `__init__.py` to match. When one
-  source module defines several units (e.g. multiple models in a single `models.py`), it stays
-  **one** `tests/test_models.py` — the per-unit split is expressed with classes (below), not with
-  extra files (`test_concept.py` + `test_scheme.py` alongside a single `models.py` is
-  non-compliant).
-
-  **Exceptions — a test whose subject is not a Python module has nothing to mirror:**
-  - *Test-only artifacts inside the tests package.* `tests/factories.py` is tested by a sibling
-    `tests/test_factories.py` at the tests root, not mirrored to a package path.
-  - *Package-level checks.* `tests/test_smoke.py` asserts that the package imports and its
-    settings are valid. Its subject is the package as a whole.
-  - *Non-Python subjects, declared by the repo.* A suite testing templates, static assets or
-    another non-module artifact is exempt when the repo declares it:
-
-    ```toml
-    [tool.forge.conformance]
-    non-mirror-paths = ["tests/test_components/"]
-    ```
-
-    A trailing slash marks a directory prefix. This is a **declaration, not a waiver**: it states
-    that no source module exists to mirror, which is why it lives in the repo rather than in a
-    conformance baseline (a baseline means "drift not fixed yet"). Declaring a path whose subject
-    *is* a Python module is a review failure. The rule is deliberately not inferred — silencing
-    every test directory that lacks a matching source package would also silence a misspelt one.
-- **Group related tests into classes.** Within a module, tests are grouped into `Test<Subject>`
-  classes — `class TestConceptModel:`, `class TestConceptSchemeModel:`, `class TestConceptManager:`
-  — so one area can be targeted when debugging (`pytest tests/test_models.py::TestConceptModel`).
-- **One factory per model.** Each model has exactly one `factory_boy` `DjangoModelFactory` in
-  `tests/factories.py`, using `factory.Sequence` for uniqueness-guarded fields and
-  `factory.SubFactory` for relations. Variants are **never** new factory subclasses
-  (`ConceptWithoutSchemeFactory` is prohibited); they are expressed by overriding fields at the
-  call site.
-- **Fixtures wrap the factory; shared setup lives in conftest.** Reusable object fixtures are thin
-  wrappers over the model's factory in `conftest.py` — `def concept(): return ConceptFactory()`,
-  `def concept_without_scheme(): return ConceptFactory(scheme=None)`. A one-off variation needs no
-  fixture: call the factory inline in the test (e.g. assert `ConceptFactory(scheme=None)` raises
-  `ValidationError`). General setup and reusable fixtures live in `conftest.py`; test modules hold
-  assertions, not construction boilerplate.
-- **Use the pytest-django toolchain.** DB access via the `db` / `transactional_db` fixtures or
-  `@pytest.mark.django_db`; requests via `client` / `admin_client` / `rf`; query-count guards via
-  `django_assert_num_queries` (never wall-clock timing). `factory_boy` and `pytest-django` ship
-  pinned in the `mvp-shared[test]` bundle — no per-repo pinning.
-
-### Article XI — Cohesion (Python)
+### Article X — Cohesion (Python)
 Related behaviour is grouped in a class, not scattered across module-level functions.
 
 **The test:** two or more module-level functions that share a *subject* belong on a class. They
@@ -152,7 +100,7 @@ between the caller and the work is not.
 
 ## Project articles (django-flex-menus-specific)
 
-### Article XII — Compatibility
+### Article XI — Compatibility
 The supported versions are recorded in `docs/adr/0001-supported-python-and-django-versions.md`
 and stated in `pyproject.toml`, the classifiers and the README. Those four agree at all times.
 Changing them is an amendment here and a new ADR, never a side effect of a dependency bump.
@@ -163,7 +111,7 @@ semver-stable: a rename or a removal is a major version, and a deprecation lives
 minor release with a warning before it goes. Anything not in that list is internal and may change
 in a patch.
 
-### Article XIII — Stack norms
+### Article XII — Stack norms
 uv-managed with a hatchling build backend, and with the development toolchain coming from the shared `mvp-shared` bundle rather
 than per-repo pins. CI calls the shared reusable workflows, pinned to a tag and never `@main`.
 Documentation is Sphinx and must build clean.
@@ -173,7 +121,7 @@ Bootstrap 5 templates under `example/` demonstrate the renderer API and are not 
 surface. A change that requires the library to know what the consumer's HTML looks like is the
 wrong change.
 
-### Article XIV — Visibility rules stay neutral
+### Article XIII — Visibility rules stay neutral
 A `check` is any predicate over the request. The library decides *when* to ask, never *what*
 makes an item visible. No check may reach for a permission framework, an authentication backend
 or a user model directly: convenience checks live alongside the neutral machinery and are opt-in,
@@ -187,11 +135,11 @@ Read at plan and review; applies to every change.
   tolerance — floors, not a 100% ratchet.
 - Every public API change updates README + CHANGELOG in the same PR.
 - Lint, type-check (`mypy`), and `deptry` pass. The lint gate is `pre-commit run --all-files`,
-  not a bare `ruff check .`: the hook config excludes `docs/`, migrations and `tests/`, and a raw
-  invocation reports findings in paths the gate does not cover.
+  not a bare `ruff check .`: the hook config excludes `docs/` and migrations, and runs hooks a
+  bare invocation does not.
 - The package builds and its metadata is valid; the README renders on the package index
   (absolute URLs only — a relative link breaks there); the public API honors the deprecation
-  policy in Article XII.
+  policy in Article XI.
 - Documentation builds clean.
 
 Article VIII is satisfied trivially at present and stays in force: the library emits almost no
@@ -201,14 +149,8 @@ adding one brings the article into play rather than being an exception to it.
 
 ## Non-negotiables
 
-- One PR per feature; Sam merges; nothing else merges the default branch.
-- **Automation commits under a bot identity, not a human PAT.** This repository's account has a
-  live bot, so automated PRs are authored by it and the default branch requires one approval.
-  Workflow files are the exception — the bot holds no permission to write them, so a PR touching
-  `.github/workflows/**` is pushed under a human identity and merged through the ruleset's
-  named bypass.
-- Machine verification (tests/build/lint) gates every stage exit; no judgment call overrides a
-  red gate.
+- Tests, build and lint pass before a change merges. Nobody overrides a red check.
+- The default branch requires one approval, and the author of a change never approves it.
 - Nothing pushes to the default branch outside a pull request. Releases run through the Prepare
   Release → Tag Release → Publish flow, never a hand-pushed tag.
 
@@ -220,4 +162,4 @@ adding one brings the article into play rather than being an exception to it.
 
 ---
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-16 | **Last Amended**: 2026-09-16
+**Version**: 2.0.0 | **Ratified**: 2026-09-16 | **Last Amended**: 2026-09-28

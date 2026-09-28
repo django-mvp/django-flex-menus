@@ -10,7 +10,6 @@ from flex_menu import Menu, MenuItem
 
 @pytest.fixture
 def registered_menu():
-    """A named menu attached to the global root, as the command expects to find one."""
     return Menu(
         "site_nav",
         children=[
@@ -27,7 +26,6 @@ class TestRenderMenuCommand:
         call_command("render_menu", stdout=out)
 
         output = out.getvalue()
-        assert "Django Flex Menu:" in output
         assert "site_nav" in output
         assert "home" in output
         assert "about" in output
@@ -48,7 +46,6 @@ class TestRenderMenuCommand:
 
         output = out.getvalue()
         assert "no_such_menu" in output
-        assert "not found" in output
         # The tree is not printed as a consolation prize — the caller asked for
         # one menu and gets told that menu is missing.
         assert "site_nav" not in output

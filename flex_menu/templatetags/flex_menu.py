@@ -1,3 +1,5 @@
+"""Template tags for processing and rendering flex_menu menus."""
+
 from django import template
 from django.template import TemplateSyntaxError
 from django.utils.safestring import mark_safe
@@ -10,8 +12,7 @@ register = template.Library()
 
 @register.simple_tag(takes_context=True)
 def process_menu(context, menu, **kwargs):
-    """
-    Process a menu for the current request.
+    """Process a menu for the current request.
 
     Caches the processed menu on the request object to avoid re-processing
     if the same menu is rendered multiple times on the same page.
@@ -33,8 +34,11 @@ def process_menu(context, menu, **kwargs):
     Returns:
         Processed MenuItem instance, or None if the menu is not found or the
         context carries no request.
+
+    Raises:
+        template.TemplateSyntaxError: If menu is given by name and no such
+            menu exists.
     """
-    # Get menu instance
     if isinstance(menu, str):
         menu_name = menu
         found_menu = root.get(menu_name)
@@ -55,16 +59,12 @@ def process_menu(context, menu, **kwargs):
     if request is None:
         return None
 
-    # Create cache key based on menu name and request ID
     cache_key = f"_processed_menu_{menu_name}_{id(request)}"
 
-    # Check if already processed for this request
     processed = getattr(request, cache_key, None)
 
     if processed is None:
-        # Process once per request
         processed = menu.process(request, **kwargs)
-        # Cache on request object
         setattr(request, cache_key, processed)
 
     return processed
@@ -72,8 +72,7 @@ def process_menu(context, menu, **kwargs):
 
 @register.simple_tag(takes_context=True)
 def render_menu(context, menu, renderer=None, include_media=True, **kwargs):
-    """
-    Process and render a menu with the specified renderer.
+    """Process and render a menu with the specified renderer.
 
     Media (CSS/JS) is automatically included in the output (CSS before the menu,
     JS after) unless include_media=False is specified.
@@ -92,37 +91,35 @@ def render_menu(context, menu, renderer=None, include_media=True, **kwargs):
     Returns:
         Rendered HTML string with media included.
 
+    Raises:
+        TemplateSyntaxError: If no renderer is given.
+
     Example:
-        {% render_menu "main_navigation" renderer="sidebar" %}
-        {% render_menu "project_menu" renderer="simple" project=project pk=project.pk %}
-        {% render_menu "sidebar" renderer="simple" include_media=False user=user %}
+        ::
+
+            {% render_menu "main_navigation" renderer="sidebar" %}
+            {% render_menu "project_menu" renderer="simple" project=project pk=project.pk %}
+            {% render_menu "sidebar" renderer="simple" include_media=False user=user %}
     """
-    # Process menu (with caching)
     processed_menu = process_menu(context, menu, **kwargs)
 
     if not processed_menu:
         return ""
 
-    # Require renderer parameter
     if renderer is None:
         raise TemplateSyntaxError(
             "render_menu requires a 'renderer' parameter. Example: {% render_menu 'main_nav' renderer='bootstrap5' %}"
         )
 
-    # Get renderer instance, or use what was passed if it is already one
     renderer_instance = (
         get_renderer(renderer) if isinstance(renderer, str) else renderer
     )
 
-    # Render menu content
     menu_html = renderer_instance.render(processed_menu, **kwargs)
 
-    # Include media if requested
     if include_media and hasattr(renderer_instance, "media"):
         media_html = str(renderer_instance.media)
         if media_html:
-            # Media HTML contains link and script tags
-            # Place before menu content (crispy-forms style)
             # Both halves are renderer output: the media tags come from the
             # renderer's own Media declaration and menu_html is already marked
             # safe by the renderer, which autoescaped as it rendered.
@@ -133,8 +130,7 @@ def render_menu(context, menu, renderer=None, include_media=True, **kwargs):
 
 @register.simple_tag(takes_context=True)
 def render_item(context, item, renderer=None, **kwargs):
-    """
-    Render a single menu item (for recursive rendering in templates).
+    """Render a single menu item (for recursive rendering in templates).
 
     Use this tag in renderer templates to recursively render child items.
 
@@ -148,22 +144,20 @@ def render_item(context, item, renderer=None, **kwargs):
         Rendered HTML string.
 
     Example:
-        {# In a renderer template #}
-        {% for child in item.visible_children %}
-          {% render_item child renderer=renderer %}
-        {% endfor %}
+        ::
+
+            {% for child in item.visible_children %}
+              {% render_item child renderer=renderer %}
+            {% endfor %}
     """
     if not item or not item.visible:
         return ""
 
-    # If renderer is a string, get the instance
     if isinstance(renderer, str):
         renderer_instance = get_renderer(renderer)
     elif renderer is None:
         renderer_instance = get_renderer()
     else:
-        # Assume it's already a renderer instance
         renderer_instance = renderer
 
-    # Render the item
     return renderer_instance.render(item, **kwargs)

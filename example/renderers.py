@@ -1,9 +1,7 @@
-"""
-Example renderers for django-flex-menus.
+"""Example renderers demonstrating Bootstrap 5 support for django-flex-menus.
 
-These are demonstrative renderers showing how to implement Bootstrap 5 support.
-They are not part of the core package and should be used as examples for
-building your own renderers.
+These are demonstrative renderers, not part of the core package, meant as
+examples for building your own renderers.
 """
 
 from flex_menu.menu import MenuItem
@@ -11,8 +9,7 @@ from flex_menu.renderers import BaseRenderer
 
 
 class Bootstrap5NavbarRenderer(BaseRenderer):
-    """
-    Bootstrap 5 navbar renderer.
+    """Bootstrap 5 navbar renderer.
 
     Renders menus as Bootstrap 5 navbar with dropdown support.
     Supports up to 2 levels of nesting (navbar -> dropdown -> items).
@@ -32,19 +29,8 @@ class Bootstrap5NavbarRenderer(BaseRenderer):
         },
     }
 
-    # class Media:
-    #     css = {
-    #         "all": (
-    #             "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css",
-    #         )
-    #     }
-    #     js = (
-    #         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
-    #     )
-
     def get_template(self, item: MenuItem) -> str:
-        """Override to handle special cases like dividers."""
-        # Check if this is a divider
+        """Route dividers to their own template."""
         if item.extra_context.get("divider", False):
             return "bootstrap5/navbar/divider.html"
 
@@ -52,8 +38,7 @@ class Bootstrap5NavbarRenderer(BaseRenderer):
 
 
 class Bootstrap5SidebarRenderer(BaseRenderer):
-    """
-    Bootstrap 5 sidebar renderer using list-group.
+    """Bootstrap 5 sidebar renderer using list-group.
 
     Renders menus as Bootstrap 5 list-group with collapsible sections.
     Supports multiple levels of nesting.
@@ -73,19 +58,8 @@ class Bootstrap5SidebarRenderer(BaseRenderer):
         },
     }
 
-    # class Media:
-    #     css = {
-    #         "all": (
-    #             "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css",
-    #         )
-    #     }
-    #     js = (
-    #         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
-    #     )
-
     def get_template(self, item: MenuItem) -> str:
-        """Override to handle special cases like dividers."""
-        # Check if this is a divider
+        """Route dividers to their own template."""
         if item.extra_context.get("divider", False):
             return "bootstrap5/sidebar/divider.html"
 

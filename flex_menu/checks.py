@@ -1,85 +1,81 @@
-"""
-Predefined check functions for Django Flex Menu.
+"""Predefined check functions controlling menu item visibility.
 
-These functions can be used as the 'check' parameter when creating menu items
-to control their visibility based on various conditions.
-
-All check functions receive a Django request object and optional keyword arguments.
-They should return a boolean value indicating whether the menu item should be visible.
+All check functions receive a Django request object and optional keyword
+arguments. They return a boolean value indicating whether the menu item
+should be visible.
 """
 
 
 def user_is_staff(request, **kwargs):
-    """
-    Check if the user associated with the given request is a staff member.
+    """Check if the user associated with the given request is a staff member.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the user is a staff member, False otherwise.
+        True if the user is a staff member, False otherwise.
     """
     return hasattr(request, "user") and request.user and request.user.is_staff
 
 
 def user_is_authenticated(request, **kwargs):
-    """
-    Checks if the user associated with the given request is authenticated.
+    """Check if the user associated with the given request is authenticated.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the user is authenticated, False otherwise.
+        True if the user is authenticated, False otherwise.
     """
     return hasattr(request, "user") and request.user and request.user.is_authenticated
 
 
 def user_is_anonymous(request, **kwargs):
-    """
-    Check if the user associated with the given request is anonymous.
+    """Check if the user associated with the given request is anonymous.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the user is anonymous, False otherwise.
+        True if the user is anonymous, False otherwise.
     """
     return not hasattr(request, "user") or not request.user or request.user.is_anonymous
 
 
 def user_is_superuser(request, **kwargs):
-    """
-    Check if the user associated with the given request is a superuser.
+    """Check if the user associated with the given request is a superuser.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the user is a superuser, False otherwise.
+        True if the user is a superuser, False otherwise.
     """
     return hasattr(request, "user") and request.user and request.user.is_superuser
 
 
 def user_in_any_group(*groups):
-    """
-    Checks if the authenticated user belongs to any of the specified groups.
+    """Build a check for membership in any of the given groups.
 
     Args:
         *groups: Variable length argument list of group names to check against.
+
     Returns:
-        function: A function that takes a Django request object and optional keyword arguments,
-                  and returns True if the user is authenticated and is a member of any of the specified groups,
-                  otherwise False.
+        A function that takes a Django request object and optional keyword
+        arguments, and returns True if the user is authenticated and is a
+        member of any of the specified groups, otherwise False.
+
     Example:
-        MenuLink(
-            name="Authors only",
-            view_name="author-management-page",
-            check=user_in_any_group('authors'),
+        ::
+
+            MenuLink(
+                name="Authors only",
+                view_name="author-management-page",
+                check=user_in_any_group("authors"),
             )
     """
 
@@ -95,18 +91,22 @@ def user_in_any_group(*groups):
 
 
 def user_has_any_permission(*perms: str):
-    """
-    Checks if the current user has at least one of the specified permissions.
+    """Build a check for at least one of the given permissions.
 
     Args:
-        *perms (str): One or more permission strings to check against the user.
+        *perms: One or more permission strings to check against the user.
+
     Returns:
-        bool: True if the user has at least one of the specified permissions, False otherwise.
+        True if the user has at least one of the specified permissions, False
+        otherwise.
+
     Example:
-        MenuLink(
-            name="Authors",
-            view_name="book-create",
-            check=user_has_any_permission('book.add_book'),
+        ::
+
+            MenuLink(
+                name="Authors",
+                view_name="book-create",
+                check=user_has_any_permission("book.add_book"),
             )
     """
 
@@ -122,17 +122,17 @@ def user_has_any_permission(*perms: str):
 
 
 def user_has_object_permission(perm: str):
-    """
-    Checks if the requesting user has a specific object-level permission.
+    """Build a check for a specific object-level permission.
 
     Note: This function is removed as it depended on the instance parameter.
     For object-level permissions, create custom check functions that get
     the object from the request context or other means.
 
     Args:
-        perm (str): The permission codename to check (e.g., 'blog.change_post').
+        perm: The permission codename to check (e.g., 'blog.change_post').
+
     Returns:
-        function: A function that always returns False with a warning.
+        A function that always returns False with a warning.
     """
 
     def _check(request, **kwargs):
@@ -150,20 +150,23 @@ def user_has_object_permission(perm: str):
 
 
 def user_in_all_groups(*groups):
-    """
-    Checks if the authenticated user belongs to ALL of the specified groups.
+    """Build a check for membership in all of the given groups.
 
     Args:
         *groups: Variable length argument list of group names to check against.
+
     Returns:
-        function: A function that takes a Django request object and optional keyword arguments,
-                  and returns True if the user is authenticated and is a member of ALL specified groups,
-                  otherwise False.
+        A function that takes a Django request object and optional keyword
+        arguments, and returns True if the user is authenticated and is a
+        member of ALL specified groups, otherwise False.
+
     Example:
-        MenuLink(
-            name="Authors and Editors only",
-            view_name="special-page",
-            check=user_in_all_groups('authors', 'editors'),
+        ::
+
+            MenuLink(
+                name="Authors and Editors only",
+                view_name="special-page",
+                check=user_in_all_groups("authors", "editors"),
             )
     """
 
@@ -180,18 +183,24 @@ def user_in_all_groups(*groups):
 
 
 def user_has_all_permissions(*perms: str):
-    """
-    Checks if the current user has ALL of the specified permissions.
+    """Build a check for all of the given permissions.
 
     Args:
-        *perms (str): One or more permission strings to check against the user.
+        *perms: One or more permission strings to check against the user.
+
     Returns:
-        function: A function that returns True if the user has ALL specified permissions, False otherwise.
+        A function that returns True if the user has ALL specified
+        permissions, False otherwise.
+
     Example:
-        MenuLink(
-            name="Full Admin",
-            view_name="admin-panel",
-            check=user_has_all_permissions('auth.add_user', 'auth.change_user', 'auth.delete_user'),
+        ::
+
+            MenuLink(
+                name="Full Admin",
+                view_name="admin-panel",
+                check=user_has_all_permissions(
+                    "auth.add_user", "auth.change_user", "auth.delete_user"
+                ),
             )
     """
 
@@ -207,15 +216,14 @@ def user_has_all_permissions(*perms: str):
 
 
 def user_is_active(request, **kwargs):
-    """
-    Check if the user associated with the given request is active.
+    """Check if the user associated with the given request is active.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the user is active, False otherwise.
+        True if the user is active, False otherwise.
     """
     if not (hasattr(request, "user") and request.user):
         return False
@@ -223,46 +231,44 @@ def user_is_active(request, **kwargs):
 
 
 def user_email_verified(request, **kwargs):
-    """
-    Check if the user's email is verified (if the user model has an email_verified field).
+    """Check if the user's email is verified.
+
+    Assumes verified for authenticated users if the user model has no
+    ``email_verified`` field.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the user's email is verified, False otherwise.
+        True if the user's email is verified, False otherwise.
     """
     if not (
         hasattr(request, "user") and request.user and request.user.is_authenticated
     ):
         return False
 
-    # Check if the user model has email_verified field
     if hasattr(request.user, "email_verified"):
         return request.user.email_verified
 
-    # If no email_verified field, assume verified for authenticated users
     return True
 
 
 def user_has_profile(request, **kwargs):
-    """
-    Check if the user has an associated profile (if using a profile model).
+    """Check if the user has an associated profile.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the user has a profile, False otherwise.
+        True if the user has a profile, False otherwise.
     """
     if not (
         hasattr(request, "user") and request.user and request.user.is_authenticated
     ):
         return False
 
-    # Check common profile relationship names
     profile_attrs = ["profile", "userprofile", "user_profile"]
 
     for attr in profile_attrs:
@@ -278,47 +284,48 @@ def user_has_profile(request, **kwargs):
 
 
 def request_is_ajax(request, **kwargs):
-    """
-    Check if the request is an AJAX request.
+    """Check if the request is an AJAX request.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the request is AJAX, False otherwise.
+        True if the request is AJAX, False otherwise.
     """
     return request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
 
 def request_is_secure(request, **kwargs):
-    """
-    Check if the request is secure (HTTPS).
+    """Check if the request is secure (HTTPS).
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if the request is secure, False otherwise.
+        True if the request is secure, False otherwise.
     """
     return request.is_secure()
 
 
 def request_method_is(*methods):
-    """
-    Check if the request method matches any of the specified methods.
+    """Build a check for the request method matching any of the given methods.
 
     Args:
         *methods: Variable length argument list of HTTP methods to check against.
+
     Returns:
-        function: A function that takes a Django request object and returns True
-                  if the request method matches any of the specified methods.
+        A function that takes a Django request object and returns True if
+        the request method matches any of the specified methods.
+
     Example:
-        MenuLink(
-            name="POST only action",
-            view_name="post-handler",
-            check=request_method_is('POST'),
+        ::
+
+            MenuLink(
+                name="POST only action",
+                view_name="post-handler",
+                check=request_method_is("POST"),
             )
     """
 
@@ -329,19 +336,23 @@ def request_method_is(*methods):
 
 
 def user_attribute_equals(attribute_name: str, expected_value):
-    """
-    Check if a user attribute equals a specific value.
+    """Build a check for a user attribute equalling a specific value.
 
     Args:
-        attribute_name (str): The name of the user attribute to check.
+        attribute_name: The name of the user attribute to check.
         expected_value: The expected value to compare against.
+
     Returns:
-        function: A function that returns True if the user attribute equals the expected value.
+        A function that returns True if the user attribute equals the
+        expected value.
+
     Example:
-        MenuLink(
-            name="Premium users only",
-            view_name="premium-content",
-            check=user_attribute_equals('subscription_type', 'premium'),
+        ::
+
+            MenuLink(
+                name="Premium users only",
+                view_name="premium-content",
+                check=user_attribute_equals("subscription_type", "premium"),
             )
     """
 
@@ -360,19 +371,23 @@ def user_attribute_equals(attribute_name: str, expected_value):
 
 
 def user_in_group_with_permission(group_name: str, permission: str):
-    """
-    Check if the user is in a specific group AND has a specific permission.
+    """Build a check for group membership combined with a permission.
 
     Args:
-        group_name (str): The name of the group to check.
-        permission (str): The permission to check.
+        group_name: The name of the group to check.
+        permission: The permission to check.
+
     Returns:
-        function: A function that returns True if the user is in the group and has the permission.
+        A function that returns True if the user is in the group and has
+        the permission.
+
     Example:
-        MenuLink(
-            name="Editor with publish rights",
-            view_name="publish-content",
-            check=user_in_group_with_permission('editors', 'blog.publish_post'),
+        ::
+
+            MenuLink(
+                name="Editor with publish rights",
+                view_name="publish-content",
+                check=user_in_group_with_permission("editors", "blog.publish_post"),
             )
     """
 
@@ -391,15 +406,14 @@ def user_in_group_with_permission(group_name: str, permission: str):
 
 
 def debug_mode_only(request, **kwargs):
-    """
-    Check if Django is running in debug mode.
+    """Check if Django is running in debug mode.
 
     Args:
-        request: The HTTP request object
-        **kwargs: Additional arguments (ignored)
+        request: The HTTP request object.
+        **kwargs: Additional arguments (ignored).
 
     Returns:
-        bool: True if DEBUG=True, False otherwise.
+        True if DEBUG=True, False otherwise.
     """
     from django.conf import settings
 
@@ -407,19 +421,22 @@ def debug_mode_only(request, **kwargs):
 
 
 def combine_checks(*check_functions, operator="and"):
-    """
-    Combine multiple check functions with AND or OR logic.
+    """Combine multiple check functions with AND or OR logic.
 
     Args:
         *check_functions: Variable length argument list of check functions.
-        operator (str): Either 'and' or 'or' to specify the combination logic.
+        operator: Either 'and' or 'or' to specify the combination logic.
+
     Returns:
-        function: A combined check function.
+        A combined check function.
+
     Example:
-        MenuLink(
-            name="Staff or superuser",
-            view_name="admin-area",
-            check=combine_checks(user_is_staff, user_is_superuser, operator='or'),
+        ::
+
+            MenuLink(
+                name="Staff or superuser",
+                view_name="admin-area",
+                check=combine_checks(user_is_staff, user_is_superuser, operator="or"),
             )
     """
 
@@ -433,18 +450,21 @@ def combine_checks(*check_functions, operator="and"):
 
 
 def negate_check(check_function):
-    """
-    Negate a check function (NOT logic).
+    """Negate a check function (NOT logic).
 
     Args:
         check_function: The check function to negate.
+
     Returns:
-        function: A negated check function.
+        A negated check function.
+
     Example:
-        MenuLink(
-            name="Non-staff only",
-            view_name="public-area",
-            check=negate_check(user_is_staff),
+        ::
+
+            MenuLink(
+                name="Non-staff only",
+                view_name="public-area",
+                check=negate_check(user_is_staff),
             )
     """
 

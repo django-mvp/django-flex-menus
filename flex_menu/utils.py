@@ -1,8 +1,4 @@
-"""
-Utility functions for django-flex-menus.
-
-This module contains helper functions for URL resolution and parameter extraction.
-"""
+"""Helper functions for URL resolution and parameter extraction."""
 
 import contextlib
 
@@ -11,23 +7,30 @@ from django.urls.exceptions import NoReverseMatch
 
 
 def get_required_url_params(view_name: str) -> frozenset:
-    """
-    Given a Django view_name (as used in reverse()), return the names of the
-    required URL parameters (e.g. {''pk''} or {''slug''}).
+    """Return the required URL parameter names for a Django view name.
 
-    Supports both simple view names (''home'') and namespaced view names (''app:home'').
-    Parameters captured by parent resolver prefixes (e.g. ''<str:uuid>/'' in an
-    include() prefix) are included.
+    Supports both simple view names ("home") and namespaced view names
+    ("app:home"). Parameters captured by parent resolver prefixes (e.g.
+    "<str:uuid>/" in an include() prefix) are included.
 
-    Relies on Django''s own pre-built resolver structures (namespace_dict,
+    Relies on Django's own pre-built resolver structures (namespace_dict,
     reverse_dict), so each call is O(1) dict lookups with no caching needed.
+
+    Args:
+        view_name: A Django view name as used in reverse(), optionally
+            namespaced (e.g. "app:home").
+
+    Returns:
+        The names of the required URL parameters, e.g. {"pk"} or {"slug"}.
+
+    Raises:
+        NoReverseMatch: If the namespace or view name cannot be found.
     """
     resolver = get_resolver()
     parts = view_name.split(":")
     name = parts[-1]
     namespaces = parts[:-1]
 
-    # Navigate the namespace hierarchy, accumulating prefix params at each level.
     accumulated_params: set[str] = set()
     current = resolver
 
@@ -36,7 +39,6 @@ def get_required_url_params(view_name: str) -> frozenset:
         if entry is None:
             raise NoReverseMatch(f"Namespace ''{ns}'' not found in ''{view_name}''.")
         _app_name, sub_resolver = entry
-        # Accumulate URL params captured by this namespace''s prefix pattern.
         pat = sub_resolver.pattern
         if hasattr(pat, "converters") and pat.converters:
             accumulated_params.update(pat.converters.keys())
@@ -46,10 +48,8 @@ def get_required_url_params(view_name: str) -> frozenset:
                 accumulated_params.update(pat.regex.groupindex.keys())
         current = sub_resolver
 
-    # Look up the local view name in the terminal resolver''s reverse_dict.
-    # MultiValueDict.get() returns the last single entry: a 4-tuple
-    # (bits, p_pattern, defaults, converters), where
-    # bits = [(format_str, [param_names]), ...]
+    # reverse_dict.get() returns a 4-tuple (bits, p_pattern, defaults, converters)
+    # where bits = [(format_str, [param_names]), ...].
     matches = current.reverse_dict.get(name)
     if matches is None:
         raise NoReverseMatch(f"No URL pattern found for view name ''{view_name}''.")

@@ -1,1 +1,1 @@
-# Example Django project package
+"""Example Django project demonstrating django-flex-menus."""

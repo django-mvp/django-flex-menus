@@ -1,3 +1,5 @@
+"""Management command printing the registered menu tree."""
+
 import logging
 
 from django.core.management.base import BaseCommand
@@ -8,10 +10,14 @@ logger = logging.getLogger(__name__)
 
 
 class Command(BaseCommand):
+    """Print the full menu tree, or a single named menu's subtree."""
+
     def add_arguments(self, parser):
+        """Add the optional ``--name`` argument selecting a single menu."""
         parser.add_argument("--name", type=str, required=False)
 
     def handle(self, *args, **options):
+        """Print the requested menu's tree, or the full tree if none is named."""
         self.stdout.write(self.style.HTTP_INFO("Django Flex Menu:"))
         self.stdout.write(
             self.style.HTTP_INFO("========================================\n")

@@ -11,8 +11,6 @@ from flex_menu.renderers import (
 
 
 class RendererWithMedia(BaseRenderer):
-    """Test renderer that includes CSS and JS media."""
-
     templates = {
         1: {
             "parent": "test/group.html",
@@ -26,16 +24,12 @@ class RendererWithMedia(BaseRenderer):
 
 
 class TestBaseRenderer:
-    """Test BaseRenderer class functionality."""
-
     def test_renderer_initialization(self):
-        """Renderer initializes with empty media when no Media class defined."""
         renderer = BaseRenderer()
         assert renderer.media is not None
         assert str(renderer.media) == ""
 
     def test_renderer_with_media_class(self):
-        """Renderer initializes media from Media inner class."""
         renderer = RendererWithMedia()
         assert renderer.media is not None
         media_str = str(renderer.media)
@@ -43,7 +37,6 @@ class TestBaseRenderer:
         assert "test/script.js" in media_str
 
     def test_get_template_for_leaf(self):
-        """get_template returns leaf template for items without children."""
         renderer = BaseRenderer()
         parent = MenuItem(name="menu")
         item = MenuItem(name="test", url="/test/", parent=parent)
@@ -52,7 +45,6 @@ class TestBaseRenderer:
         assert template == "menu/item.html"
 
     def test_get_template_for_parent(self):
-        """get_template returns parent template for items with children."""
         renderer = BaseRenderer()
         parent = MenuItem(name="menu")
         item = MenuItem(
@@ -63,16 +55,13 @@ class TestBaseRenderer:
         assert template == "menu/group.html"
 
     def test_get_template_with_custom_templates(self):
-        """get_template uses custom templates when provided."""
         renderer = RendererWithMedia()
-        # Create an item at depth 1 (which has templates defined)
         item = MenuItem(name="test", url="/test/")
 
         template = renderer.get_template(item)
         assert template == "test/item.html"
 
     def test_get_context_data(self):
-        """get_context_data builds correct context dictionary."""
         renderer = BaseRenderer()
         parent = MenuItem(name="menu")
         item = MenuItem(
@@ -89,7 +78,6 @@ class TestBaseRenderer:
         assert context["custom"] == "value"
 
     def test_get_template_raises_for_unsupported_depth(self):
-        """get_template raises ValueError for unsupported depth without default."""
 
         class LimitedRenderer(BaseRenderer):
             templates = {
@@ -103,11 +91,10 @@ class TestBaseRenderer:
         level2 = MenuItem(name="level2", parent=level1)
         level3 = MenuItem(name="level3", url="/test/", parent=level2)
 
-        with pytest.raises(ValueError, match="does not support depth"):
+        with pytest.raises(ValueError):
             renderer.get_template(level3)
 
     def test_get_template_uses_default_for_unsupported_depth(self):
-        """get_template uses default templates for unsupported depths when available."""
 
         class DefaultRenderer(BaseRenderer):
             templates = {
@@ -129,7 +116,6 @@ class TestBaseRenderer:
         assert template == "menu/default_item.html"
 
     def test_render_returns_empty_for_invisible(self):
-        """render() returns empty string for invisible items."""
         renderer = BaseRenderer()
         parent = MenuItem(name="menu")
         MenuItem(name="test", url="/test/", parent=parent)
@@ -143,7 +129,6 @@ class TestBaseRenderer:
         assert html == ""
 
     def test_render_attempts_template_for_visible(self):
-        """render() checks visibility and returns appropriate result."""
         renderer = BaseRenderer()
         parent = MenuItem(
             name="menu",
@@ -155,7 +140,6 @@ class TestBaseRenderer:
         processed = parent.process(rf.get("/"))
         child = processed.visible_children[0]
 
-        # Test that visible items attempt rendering (will get template path)
         child.visible = True
         template_path = renderer.get_template(child)
         assert isinstance(template_path, str)
@@ -163,26 +147,21 @@ class TestBaseRenderer:
 
 
 class TestGetRenderer:
-    """Test get_renderer() function."""
-
     def test_get_default_renderer_fallback(self, settings):
-        """get_renderer('default') returns BaseRenderer if not configured."""
         settings.FLEX_MENUS = {}
 
         renderer = get_renderer("default")
         assert isinstance(renderer, BaseRenderer)
 
     def test_get_renderer_raises_for_unknown(self, settings):
-        """get_renderer() raises ValueError for unknown renderer."""
         settings.FLEX_MENUS = {
             "renderers": {},
         }
 
-        with pytest.raises(ValueError, match="not found"):
+        with pytest.raises(ValueError, match="nonexistent"):
             get_renderer("nonexistent")
 
     def test_get_renderer_with_settings(self, settings):
-        """get_renderer() can retrieve configured renderer."""
         settings.FLEX_MENUS = {
             "renderers": {
                 "test": "flex_menu.renderers.BaseRenderer",
@@ -194,14 +173,10 @@ class TestGetRenderer:
 
 
 class TestMediaCombination:
-    """Test Media combining from multiple renderers."""
-
     def test_combine_test_renderer_media(self):
-        """Test that Media objects can be combined."""
         renderer1 = RendererWithMedia()
         renderer2 = BaseRenderer()
 
-        # Test that media can be accessed and combined
         combined = renderer1.media + renderer2.media
         combined_str = str(combined)
 

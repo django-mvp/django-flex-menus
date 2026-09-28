@@ -1,9 +1,4 @@
-"""
-Renderer system for django-flex-menus.
-
-Renderers handle the presentation layer, converting processed menu items
-into HTML using templates. This decouples menu structure/logic from rendering.
-"""
+"""Renderer system converting processed menu items into HTML using templates."""
 
 import logging
 from typing import Any
@@ -20,37 +15,36 @@ logger = logging.getLogger(__name__)
 
 
 class BaseRenderer:
-    """
-    Base renderer class for menu rendering.
+    """Base renderer class for menu rendering.
 
     Renderers define how menu items are presented using templates.
     Templates are selected based on menu depth and properties.
 
-    Attributes:
-        templates (dict): Mapping of depth -> template configuration.
-                         Each depth can have 'parent' and 'leaf' templates,
-                         or just 'default'. If a depth is not found, uses
-                         the 'default' key if present, otherwise raises error.
+    An optional inner ``Media`` class defines CSS and JS dependencies for
+    this renderer, following Django's ``Form.Media``/``ModelAdmin.Media``
+    pattern.
 
-    Media (optional):
-        Inner class defining CSS and JS dependencies for this renderer.
-        Similar to Django's Form.Media and ModelAdmin.Media pattern.
+    Attributes:
+        templates: Mapping of depth -> template configuration. Each depth
+            can have 'parent' and 'leaf' templates, or just 'default'. If a
+            depth is not found, uses the 'default' key if present, otherwise
+            raises an error.
 
     Example:
-        class MyRenderer(BaseRenderer):
-            templates = {
-                0: {'default': 'menu/container.html'},
-                1: {
-                    'parent': 'menu/dropdown.html',
-                    'leaf': 'menu/item.html',
-                },
-            }
+        ::
 
-            class Media:
-                css = {
-                    'all': ('menu/styles.css',)
+            class MyRenderer(BaseRenderer):
+                templates = {
+                    0: {"default": "menu/container.html"},
+                    1: {
+                        "parent": "menu/dropdown.html",
+                        "leaf": "menu/item.html",
+                    },
                 }
-                js = ('menu/scripts.js',)
+
+                class Media:
+                    css = {"all": ("menu/styles.css",)}
+                    js = ("menu/scripts.js",)
     """
 
     templates: dict[int | str, dict[str, str]] = {
@@ -61,8 +55,6 @@ class BaseRenderer:
     }
 
     def __init__(self):
-        """Initialize renderer and setup media if defined."""
-        # Check if renderer defines a Media class
         if hasattr(self, "Media"):
             self._media = Media(self.Media)
         else:
@@ -70,17 +62,11 @@ class BaseRenderer:
 
     @property
     def media(self):
-        """
-        Return media assets (CSS/JS) required by this renderer.
-
-        Returns:
-            django.forms.Media instance with CSS and JS files.
-        """
+        """Return media assets (CSS/JS) required by this renderer."""
         return self._media
 
     def get_template(self, item: MenuItem) -> str:
-        """
-        Get the template path for a menu item based on depth and properties.
+        """Get the template path for a menu item based on depth and properties.
 
         Args:
             item: The menu item to render.
@@ -93,15 +79,12 @@ class BaseRenderer:
         """
         depth = item.depth
 
-        # Try to get templates for this specific depth
         depth_templates = self.templates.get(depth)
 
         if not depth_templates:
-            # Try to use default templates
             depth_templates = self.templates.get("default")
 
             if not depth_templates:
-                # No default provided - raise error
                 supported_depths = [k for k in self.templates if k != "default"]
                 raise ValueError(
                     f"Renderer {self.__class__.__name__} does not support depth {depth}. "
@@ -109,14 +92,11 @@ class BaseRenderer:
                     f"Add a 'default' key to templates dict to handle arbitrary depths."
                 )
 
-        # Determine template key based on item properties
         template_key = "parent" if item.has_children else "leaf"
 
-        # Get the actual template path
         template = depth_templates.get(template_key)
 
         if not template:
-            # Fall back to default if specific key not found
             template = depth_templates.get("default")
 
         if not template:
@@ -129,8 +109,7 @@ class BaseRenderer:
         return template
 
     def get_context_data(self, item: MenuItem, **kwargs) -> dict[str, Any]:
-        """
-        Build context data for template rendering.
+        """Build context data for template rendering.
 
         Args:
             item: The menu item to render.
@@ -148,7 +127,6 @@ class BaseRenderer:
             "selected": item.selected,
             "label": item.name,
             "url": item.url if item.url else None,
-            # Extra context from menu item
             **item.extra_context,
             **kwargs,
         }
@@ -156,8 +134,7 @@ class BaseRenderer:
         return context
 
     def render(self, item: MenuItem, **kwargs) -> str:
-        """
-        Render a menu item using its template.
+        """Render a menu item using its template.
 
         Args:
             item: The menu item to render.
@@ -178,8 +155,7 @@ class BaseRenderer:
 
 
 def get_renderer(name: str | None = None) -> BaseRenderer:
-    """
-    Get a renderer instance by name from settings.
+    """Get a renderer instance by name from settings.
 
     Loads renderer class path from FLEX_MENUS['renderers'] dict in settings.
     If no name provided, uses FLEX_MENUS['default_renderer'].
@@ -193,33 +169,33 @@ def get_renderer(name: str | None = None) -> BaseRenderer:
     Raises:
         ValueError: If renderer not found in settings.
         ImportError: If renderer class cannot be imported.
+        TypeError: If the imported renderer class has no 'render' method.
 
     Example:
-        # In settings.py
-        FLEX_MENUS = {
-            'renderers': {
-                'bootstrap5': 'myapp.renderers.Bootstrap5Renderer',
-                'tailwind': 'myapp.renderers.TailwindRenderer',
-            },
-            'default_renderer': 'bootstrap5',
-        }
+        ::
 
-        # In code or template
-        renderer = get_renderer('bootstrap5')
-        html = renderer.render(menu_item)
+            # In settings.py
+            FLEX_MENUS = {
+                "renderers": {
+                    "bootstrap5": "myapp.renderers.Bootstrap5Renderer",
+                    "tailwind": "myapp.renderers.TailwindRenderer",
+                },
+                "default_renderer": "bootstrap5",
+            }
+
+            # In code or template
+            renderer = get_renderer("bootstrap5")
+            html = renderer.render(menu_item)
     """
     config = getattr(settings, "FLEX_MENUS", {})
     renderers = config.get("renderers", {})
 
-    # Determine which renderer to use
     if name is None:
         name = config.get("default_renderer", "default")
 
-    # Get renderer path
     renderer_path = renderers.get(name)
 
     if not renderer_path:
-        # If 'default' requested and not in config, use BaseRenderer
         if name == "default":
             return BaseRenderer()
 
@@ -230,7 +206,6 @@ def get_renderer(name: str | None = None) -> BaseRenderer:
             f"Add to settings.py: FLEX_MENUS = {{ 'renderers': {{ '{name}': 'path.to.RendererClass' }} }}"
         )
 
-    # Import and instantiate renderer class
     try:
         renderer_class = import_string(renderer_path)
     except ImportError as e:
@@ -238,7 +213,6 @@ def get_renderer(name: str | None = None) -> BaseRenderer:
             f"Cannot import renderer '{name}' from '{renderer_path}': {e}"
         ) from e
 
-    # Validate renderer has required methods
     if not hasattr(renderer_class, "render"):
         raise TypeError(f"Renderer class '{renderer_path}' must have a 'render' method")
 
