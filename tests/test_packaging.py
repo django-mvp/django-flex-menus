@@ -29,19 +29,16 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 @pytest.fixture(scope="module")
 def pyproject():
-    """The parsed contents of the package's pyproject.toml."""
     return tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
 
 
 @pytest.fixture(scope="module")
 def readme():
-    """The raw text of the README."""
     return (REPO_ROOT / "README.md").read_text(encoding="utf-8")
 
 
 @pytest.fixture(scope="module")
 def django_requirement(pyproject):
-    """The declared runtime requirement on Django."""
     requirements = [
         Requirement(entry) for entry in pyproject["project"]["dependencies"]
     ]
@@ -52,7 +49,6 @@ def django_requirement(pyproject):
 
 @pytest.fixture(scope="module")
 def classified_django_versions(pyproject):
-    """The Django versions claimed by the `Framework :: Django :: X.Y` classifiers."""
     versions = [
         Version(classifier.removeprefix("Framework :: Django :: ").strip())
         for classifier in pyproject["project"]["classifiers"]
@@ -63,12 +59,9 @@ def classified_django_versions(pyproject):
 
 
 class TestDjangoSupportRange:
-    """The declared Django range agrees with every version the package claims to support."""
-
     def test_every_classified_version_can_be_installed(
         self, django_requirement, classified_django_versions
     ):
-        """A version listed in the classifiers must satisfy the runtime constraint."""
         excluded = [
             str(version)
             for version in classified_django_versions
@@ -82,7 +75,6 @@ class TestDjangoSupportRange:
     def test_the_floor_is_the_lowest_classified_version(
         self, django_requirement, classified_django_versions
     ):
-        """The lower bound names the oldest supported release rather than a newer one."""
         lower_bounds = [
             Version(specifier.version)
             for specifier in django_requirement.specifier
@@ -100,7 +92,6 @@ class TestDjangoSupportRange:
     def test_the_readme_states_the_classified_versions(
         self, readme, classified_django_versions
     ):
-        """The README's Requirements section names the same Django versions as the classifiers."""
         sections = readme.split("## Requirements", 1)
         assert len(sections) == 2, (
             "the README has no `## Requirements` section; it is one of the places the "
@@ -121,10 +112,7 @@ class TestDjangoSupportRange:
 
 
 class TestPythonSupportRange:
-    """`requires-python` agrees with the Python versions the classifiers claim."""
-
     def test_every_classified_version_can_be_installed(self, pyproject):
-        """A Python version listed in the classifiers must satisfy `requires-python`."""
         specifier = SpecifierSet(pyproject["project"]["requires-python"])
         versions = [
             Version(
