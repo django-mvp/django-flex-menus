@@ -2,10 +2,15 @@
 
 [![Tests](https://github.com/django-mvp/django-flex-menus/actions/workflows/tests.yml/badge.svg)](https://github.com/django-mvp/django-flex-menus/actions/workflows/tests.yml)
 [![Build](https://github.com/django-mvp/django-flex-menus/actions/workflows/build.yml/badge.svg)](https://github.com/django-mvp/django-flex-menus/actions/workflows/build.yml)
-[![codecov](https://codecov.io/gh/django-mvp/django-flex-menus/branch/main/graph/badge.svg)](https://codecov.io/gh/django-mvp/django-flex-menus)
+[![Docs](https://github.com/django-mvp/django-flex-menus/actions/workflows/docs.yml/badge.svg)](https://github.com/django-mvp/django-flex-menus/actions/workflows/docs.yml)
+[![Publish](https://github.com/django-mvp/django-flex-menus/actions/workflows/publish.yml/badge.svg)](https://github.com/django-mvp/django-flex-menus/actions/workflows/publish.yml)
+[![Coverage](https://codecov.io/gh/django-mvp/django-flex-menus/branch/main/graph/badge.svg)](https://codecov.io/gh/django-mvp/django-flex-menus)
 [![PyPI](https://img.shields.io/pypi/v/django-flex-menus)](https://pypi.org/project/django-flex-menus/)
+[![Development status](https://img.shields.io/pypi/status/django-flex-menus)](https://pypi.org/project/django-flex-menus/)
 [![Python](https://img.shields.io/pypi/pyversions/django-flex-menus)](https://pypi.org/project/django-flex-menus/)
-[![License](https://img.shields.io/github/license/django-mvp/django-flex-menus)](https://github.com/django-mvp/django-flex-menus/blob/main/LICENSE)
+[![Django](https://img.shields.io/pypi/djversions/django-flex-menus)](https://pypi.org/project/django-flex-menus/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Licence](https://img.shields.io/github/license/django-mvp/django-flex-menus)](https://github.com/django-mvp/django-flex-menus/blob/main/LICENSE)
 
 Flexible site menus for Django.
 
@@ -149,6 +154,13 @@ render, so keep visibility checks cheap: they run for every item, on every reque
 
 Full documentation, including the renderer API and how to write your own, is at
 <https://django-mvp.github.io/django-flex-menus/>.
+
+## Contributing
+
+Changes follow [CONSTITUTION.md](https://github.com/django-mvp/django-flex-menus/blob/main/CONSTITUTION.md), the
+[testing standards](https://github.com/django-mvp/django-flex-menus/blob/main/docs/contributing/standards/testing.md), the
+[code documentation standards](https://github.com/django-mvp/django-flex-menus/blob/main/docs/contributing/standards/code-documentation.md) and the
+[Django standards](https://github.com/django-mvp/django-flex-menus/blob/main/docs/contributing/standards/django.md).
 
 ## Changelog
 
