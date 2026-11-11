@@ -17,7 +17,9 @@ YAGNI over speculation.
 
 ### Article III — Anti-Abstraction
 No wrapper layers, base classes, or "future-proofing" indirection without a present, concrete
-second use. Prefer duplication over the wrong abstraction.
+second use. Prefer duplication over the wrong abstraction. A second use also counts as
+present when it is in another approved specification built in the same batch, such as several
+features specified together from one prototype.
 
 ### Article IV — Integration-First
 Contracts and integration points are designed and tested before internals are polished.
@@ -165,4 +167,4 @@ adding one brings the article into play rather than being an exception to it.
 
 ---
 
-**Version**: 2.1.0 | **Ratified**: 2026-09-16 | **Last Amended**: 2026-10-12
+**Version**: 2.1.1 | **Ratified**: 2026-09-16 | **Last Amended**: 2026-11-11
