@@ -47,7 +47,7 @@ include = ["flex_menu", "README.md", "LICENSE"]
 # package in the organisation runs the same version of each tool.
 dev = ["mvp-shared[dev,test]"]
 # Installed only where the documentation is built: `uv sync --group docs`.
-docs = ["fairdm-docs[sphinx_book_theme]"]
+docs = ["fairdm-docs"]
 
 [tool.uv.sources]
 mvp-shared = { git = "https://github.com/django-mvp/shared.git", tag = "v0.6.0" }
